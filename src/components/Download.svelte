@@ -38,6 +38,7 @@
 			chrome.downloads.removeFile(download.id);
 		}
 
+		chrome.downloads.cancel(download.id);
 		chrome.downloads.erase({ id: download.id });
 	}
 </script>
