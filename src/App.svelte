@@ -5,16 +5,23 @@
 
 	chrome.downloads.setShelfEnabled(true);
 
-	chrome.downloads.search({}, (d) => {
-		downloads = d;
-	});
-
-	console.log(downloads);
+	function updateDownloadList() {
+		chrome.downloads.search({}, (d) => {
+			downloads = d;
+		});
+	}
 
 	function openDownloadsTab() {
 		const tab = { url: "chrome://downloads" };
 		chrome.tabs.create(tab);
 	}
+
+	chrome.downloads.onCreated.addListener(updateDownloadList);
+	chrome.downloads.onChanged.addListener(updateDownloadList);
+	chrome.downloads.onDeterminingFilename.addListener(updateDownloadList);
+	chrome.downloads.onErased.addListener(updateDownloadList);
+
+	updateDownloadList();
 </script>
 
 <style>
