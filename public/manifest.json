@@ -1,0 +1,22 @@
+{
+	"name": "Download Manager",
+	"short_name": "Downloads",
+	"version": "2.0",
+	"description": "A less intrusive way to access your recent downloads",
+	"manifest_version": 3,
+	"permissions": [
+		"downloads",
+		"downloads.open",
+		"downloads.shelf"
+	],
+	"action": {
+		"default_popup": "index.html",
+		"default_title": "Downloads",
+		"default_icon": {
+			"16": "assets/icon-16.png",
+			"32": "assets/icon-32.png",
+			"48": "assets/icon-48.png",
+			"128": "assets/icon-128.png"
+		}
+	}
+}
