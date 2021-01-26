@@ -7,6 +7,7 @@
 	$: canPause = download.state === "in_progress";
 
 	$: filename = download.filename.split(/[\/\\]/).pop();
+	$: progress = (download.bytesReceived / download.totalBytes) * 100;
 
 	chrome.downloads.getFileIcon(download.id, (i) => (icon = i));
 
@@ -45,11 +46,31 @@
 
 <style>
 	.download {
+		position: relative;
 		display: flex;
 		flex-flow: row nowrap;
 		align-items: center;
 		width: 100%;
 		height: 40px;
+	}
+
+	.download::before {
+		content: "";
+		position: absolute;
+		top: 0;
+		left: -100%;
+		width: 100%;
+		height: 100%;
+		display: block;
+		transform: translateX(var(--progress));
+		background-color: green;
+		transition: transform 500ms linear, opacity 250ms ease-out 1s;
+		opacity: 0;
+		z-index: -1;
+	}
+
+	.download.downloading::before {
+		opacity: 1;
 	}
 
 	.file {
@@ -78,8 +99,11 @@
 	}
 </style>
 
-<div class="download">
-	<button class="file" on:click={handleFileClick}>
+<div
+	class="download"
+	style="--progress: {progress}%"
+	class:downloading={canPause}>
+	<button class="file" title={filename} on:click={handleFileClick}>
 		<img class="icon" src={icon} alt="" />{filename}
 	</button>
 	{#if canPlay}

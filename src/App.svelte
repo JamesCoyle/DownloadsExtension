@@ -3,8 +3,6 @@
 
 	let downloads = [];
 
-	chrome.downloads.setShelfEnabled(true);
-
 	function updateDownloadList() {
 		chrome.downloads.search({}, (d) => {
 			downloads = d;
@@ -16,11 +14,19 @@
 		chrome.tabs.create(tab);
 	}
 
+	// todo : move to service worker
+	chrome.downloads.setShelfEnabled(true);
+
+	// update the download list when events fire
 	chrome.downloads.onCreated.addListener(updateDownloadList);
 	chrome.downloads.onChanged.addListener(updateDownloadList);
 	chrome.downloads.onDeterminingFilename.addListener(updateDownloadList);
 	chrome.downloads.onErased.addListener(updateDownloadList);
 
+	// poll for list changes
+	setInterval(updateDownloadList, 500);
+
+	// populate downloads on first load
 	updateDownloadList();
 </script>
 
