@@ -72,7 +72,7 @@
 	<h1 class="header">Downloads</h1>
 
 	<div class="scrollable">
-		{#each downloads as download}
+		{#each downloads as download (download.id)}
 			<Download {download} />
 		{/each}
 	</div>
