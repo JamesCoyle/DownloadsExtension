@@ -25,5 +25,8 @@
 			"48": "icons/default/icon-48.png",
 			"128": "icons/default/icon-128.png"
 		}
+	},
+	"background": {
+		"service_worker": "background.js"
 	}
 }

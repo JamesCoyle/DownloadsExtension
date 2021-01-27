@@ -20,7 +20,6 @@
 	// update the download list when events fire
 	chrome.downloads.onCreated.addListener(updateDownloadList);
 	chrome.downloads.onChanged.addListener(updateDownloadList);
-	chrome.downloads.onDeterminingFilename.addListener(updateDownloadList);
 	chrome.downloads.onErased.addListener(updateDownloadList);
 
 	// poll for list changes
