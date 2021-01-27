@@ -13,10 +13,10 @@
 		"default_popup": "index.html",
 		"default_title": "Downloads",
 		"default_icon": {
-			"16": "assets/icon-16.png",
-			"32": "assets/icon-32.png",
-			"48": "assets/icon-48.png",
-			"128": "assets/icon-128.png"
+			"16": "icons/default/icon-16.png",
+			"32": "icons/default/icon-32.png",
+			"48": "icons/default/icon-48.png",
+			"128": "icons/default/icon-128.png"
 		}
 	}
 }
