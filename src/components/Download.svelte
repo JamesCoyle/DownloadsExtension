@@ -3,8 +3,9 @@
 
 	let icon;
 
-	$: canPlay = download.paused;
-	$: canPause = download.state === "in_progress";
+	$: paused = download.paused;
+	$: downloading = download.state === "in_progress";
+	$: complete = download.state === "complete";
 
 	$: filename = download.filename.split(/[\/\\]/).pop();
 	$: progress = (download.bytesReceived / download.totalBytes) * 100;
@@ -63,14 +64,18 @@
 		height: 100%;
 		display: block;
 		transform: translateX(var(--progress));
-		background-color: green;
 		transition: transform 500ms linear, opacity 250ms ease-out 1s;
 		opacity: 0;
 		z-index: -1;
 	}
 
 	.download.downloading::before {
+		background-color: #3369d7;
 		opacity: 1;
+	}
+
+	.download.complete::before {
+		background-color: #33991e;
 	}
 
 	.file {
@@ -102,17 +107,18 @@
 <div
 	class="download"
 	style="--progress: {progress}%"
-	class:downloading={canPause}>
+	class:downloading
+	class:complete>
 	<button class="file" title={filename} on:click={handleFileClick}>
 		<img class="icon" src={icon} alt="" />{filename}
 	</button>
-	{#if canPlay}
+	{#if paused}
 		<button class="button" on:click={play}>
 			<svg width="20" height="20" viewBox="0 0 24 24">
 				<path d="M8,5.14V19.14L19,12.14L8,5.14Z" fill="currentColor" />
 			</svg>
 		</button>
-	{:else if canPause}
+	{:else if downloading}
 		<button class="button" on:click={pause}>
 			<svg width="20" height="20" viewBox="0 0 24 24">
 				<path d="M14,19H18V5H14M6,19H10V5H6V19Z" fill="currentColor" />

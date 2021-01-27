@@ -10,23 +10,27 @@
 		"48": "images/download48.png",
 		"64": "images/download64.png"
 	},
-	"manifest_version": 3,
+	"manifest_version": 2,
 	"permissions": [
 		"downloads",
 		"downloads.open",
-		"downloads.shelf"
+		"downloads.shelf",
+		"storage"
 	],
-	"action": {
+	"browser_action": {
 		"default_popup": "index.html",
 		"default_title": "Downloads",
 		"default_icon": {
 			"16": "icons/default/icon-16.png",
+			"24": "icons/default/icon-24.png",
 			"32": "icons/default/icon-32.png",
-			"48": "icons/default/icon-48.png",
-			"128": "icons/default/icon-128.png"
+			"48": "icons/default/icon-48.png"
 		}
 	},
 	"background": {
-		"service_worker": "background.js"
+		"scripts": [
+			"background.js"
+		],
+		"persistent": false
 	}
 }

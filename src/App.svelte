@@ -14,8 +14,8 @@
 		chrome.tabs.create(tab);
 	}
 
-	// todo : move to service worker
-	chrome.downloads.setShelfEnabled(true);
+	// allow background to detect when popup open
+	chrome.runtime.connect({ name: "popup" });
 
 	// update the download list when events fire
 	chrome.downloads.onCreated.addListener(updateDownloadList);
