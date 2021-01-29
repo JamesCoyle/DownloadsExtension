@@ -36,7 +36,7 @@
 	}
 
 	function remove(e) {
-		if (e.ctrlKey) {
+		if (e.ctrlKey && download.state === "complete") {
 			chrome.downloads.removeFile(download.id);
 		}
 
