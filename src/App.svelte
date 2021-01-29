@@ -83,6 +83,17 @@
 	.button svg {
 		margin-right: 1rem;
 	}
+
+	.center {
+		display: flex;
+		flex-flow: column nowrap;
+		justify-content: center;
+		align-items: center;
+		height: 100%;
+		color: #9aa0a6;
+		font-weight: bold;
+		text-align: center;
+	}
 </style>
 
 <div class="flex">
@@ -91,6 +102,15 @@
 	<div class="scrollable">
 		{#each downloads as download (download.id)}
 			<Download {download} />
+		{:else}
+			<div class="center">
+				<img
+					width="160"
+					height="160"
+					src="images/no-downloads.svg"
+					alt="" />
+				<p>Files you download appear here</p>
+			</div>
 		{/each}
 	</div>
 
