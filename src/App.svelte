@@ -5,7 +5,7 @@
 
 	function updateDownloadList() {
 		chrome.downloads.search({}, (d) => {
-			downloads = d.filter((d) => d.filename);
+			downloads = d.filter((d) => d.filename && d.incognito == false);
 			console.log(downloads);
 		});
 	}
