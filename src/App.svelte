@@ -5,7 +5,8 @@
 
 	function updateDownloadList() {
 		chrome.downloads.search({}, (d) => {
-			downloads = d;
+			downloads = d.filter((d) => d.filename);
+			console.log(downloads);
 		});
 	}
 
