@@ -15,7 +15,8 @@
 		"downloads",
 		"downloads.open",
 		"downloads.shelf",
-		"storage"
+		"storage",
+		"notifications"
 	],
 	"browser_action": {
 		"default_popup": "index.html",

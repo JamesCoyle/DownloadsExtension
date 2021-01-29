@@ -12,7 +12,7 @@ function update() {
 					break
 
 				case 'complete':
-					setDownloadComplete(download.id)
+					setDownloadComplete(download)
 					break
 			}
 		})
@@ -23,7 +23,7 @@ function update() {
 		})
 
 		// if any downloads are in progress monitor for updates
-		if (downloading > 0) setTimeout(update, 500)
+		if (downloading > 0) setTimeout(update, 1000)
 	})
 }
 
@@ -35,24 +35,33 @@ function addDownload(download) {
 	})
 }
 
-function setDownloadComplete(downloadId) {
+function setDownloadComplete(download) {
 	chrome.storage.local.get('activeDownloads', (result) => {
 		const activeDownloads = result.activeDownloads || []
 
 		// return if not found
-		if (activeDownloads.indexOf(downloadId) < 0) return
+		if (activeDownloads.indexOf(download.id) < 0) return
 
 		// remove from active
-		chrome.storage.local.set({ activeDownloads: activeDownloads.filter((id) => id !== downloadId) })
+		chrome.storage.local.set({ activeDownloads: activeDownloads.filter((id) => id !== download.id) })
 
 		if (popupOpen) return
 
 		// add to complete
 		chrome.storage.local.get('completeDownloads', (result) => {
 			let completeDownloads = result.completeDownloads || []
-			if (completeDownloads.indexOf(downloadId) < 0) {
-				chrome.storage.local.set({ completeDownloads: [...completeDownloads, downloadId] })
+			if (completeDownloads.indexOf(download.id) < 0) {
+				chrome.storage.local.set({ completeDownloads: [...completeDownloads, download.id] })
 			}
+		})
+
+		// notify user
+		chrome.notifications.create(download.id.toString(), {
+			title: 'Download Complete',
+			message: download.filename,
+			iconUrl: 'images/download128.png',
+			type: 'basic',
+			buttons: [{ title: 'Open' }, { title: 'Show in folder' }],
 		})
 	})
 }
@@ -71,25 +80,37 @@ function updateBadge(downloading, complete) {
 	}
 }
 
+// disable default download shelf
 chrome.downloads.setShelfEnabled(true)
 
+// listen for updates
 chrome.downloads.onCreated.addListener(addDownload)
 chrome.downloads.onChanged.addListener(update)
 chrome.downloads.onErased.addListener(update)
 
+// detect when popup opened
 chrome.runtime.onConnect.addListener((port) => {
 	if (port.name !== 'popup') return
 
 	popupOpen = true
 	chrome.storage.local.set({ completeDownloads: [] })
+	update()
 
 	port.onDisconnect.addListener(() => {
 		popupOpen = false
+		update()
 	})
 })
 
-// chrome.runtime.onSuspend.addListener(function () {
-// 	console.log('Unloading.')
-// 	chrome.browserAction.setBadgeBackgroundColor({ color: '#FF0000' })
-// 	chrome.browserAction.setBadgeText({ text: 'DED' })
-// })
+// open file on notification click
+chrome.notifications.onClicked.addListener((notificationId) => {
+	const downloadId = parseInt(notificationId)
+	chrome.downloads.open(downloadId)
+})
+
+// open file or folder when notification buttons clicked
+chrome.notifications.onButtonClicked.addListener((notificationId, showInFolder) => {
+	const downloadId = parseInt(notificationId)
+	if (showInFolder) chrome.downloads.show(downloadId)
+	else chrome.downloads.open(downloadId)
+})
