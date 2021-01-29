@@ -36,12 +36,22 @@
 	}
 
 	function remove(e) {
-		if (e.ctrlKey && download.state === "complete") {
-			chrome.downloads.removeFile(download.id);
+		// cancel download if not complete
+		if (download.state !== "complete") {
+			chrome.downloads.cancel(download.id);
+			return;
 		}
 
-		chrome.downloads.cancel(download.id);
-		chrome.downloads.erase({ id: download.id });
+		if (e.ctrlKey) {
+			// delete file and remove from history
+			chrome.downloads.removeFile(download.id, () => {
+				// todo : check for error before erasing
+				chrome.downloads.erase({ id: download.id });
+			});
+		} else {
+			// clear download from history
+			chrome.downloads.erase({ id: download.id });
+		}
 	}
 </script>
 
