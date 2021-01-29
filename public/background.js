@@ -4,22 +4,37 @@ function update() {
 	// fetch all downloads and watch any in progress
 	chrome.downloads.search({}, (downloads) => {
 		let downloading = 0
+		let paused = 0
+		let error = 0
+
+		console.log(downloads)
 
 		downloads.forEach((download) => {
-			switch (download.state) {
-				case 'in_progress':
-					downloading++
-					break
+			if (download.paused) paused++
+			else if (download.error && download.error != 'USER_CANCELED') error++
+			else {
+				switch (download.state) {
+					case 'in_progress':
+						downloading++
+						break
 
-				case 'complete':
-					setDownloadComplete(download)
-					break
+					case 'complete':
+						setDownloadComplete(download)
+						break
+				}
 			}
 		})
 
 		chrome.storage.local.get('completeDownloads', ({ completeDownloads }) => {
 			const complete = (completeDownloads || []).length
-			updateBadge(downloading, complete)
+			const total = downloading + paused + error + complete
+
+			if (error) state = 'error'
+			else if (downloading) state = 'downloading'
+			else if (paused) state = 'paused'
+			else state = 'complete'
+
+			updateBadge(state, total, complete)
 		})
 
 		// if any downloads are in progress monitor for updates
@@ -66,18 +81,40 @@ function setDownloadComplete(download) {
 	})
 }
 
-function updateBadge(downloading, complete) {
-	const total = downloading + complete
+function updateBadge(state, total, complete) {
+	let color = ''
+	let text = ''
 
-	if (downloading) {
-		chrome.browserAction.setBadgeBackgroundColor({ color: '#3369d7' })
-		chrome.browserAction.setBadgeText({ text: complete + '/' + total })
-	} else if (complete && !popupOpen) {
-		chrome.browserAction.setBadgeBackgroundColor({ color: '#33991e' })
-		chrome.browserAction.setBadgeText({ text: complete.toString() })
-	} else {
-		chrome.browserAction.setBadgeText({ text: '' })
+	console.log(state, total, complete)
+
+	switch (state) {
+		case 'downloading':
+			color = '#3369d7'
+			text = complete + '/' + total
+			break
+
+		case 'paused':
+			color = '#99951e'
+			text = complete + '/' + total
+			break
+
+		case 'error':
+			color = '#d73333'
+			text = complete + '/' + total
+			break
+
+		case 'complete':
+			color = '#33991e'
+			text = complete
+
+		default:
+			color = '#5c5c5c'
+			text = ''
+			break
 	}
+
+	chrome.browserAction.setBadgeBackgroundColor({ color })
+	chrome.browserAction.setBadgeText({ text })
 }
 
 // disable default download shelf

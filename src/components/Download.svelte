@@ -3,8 +3,9 @@
 
 	let icon;
 
-	$: paused = download.paused;
 	$: downloading = download.state === "in_progress";
+	$: paused = download.paused;
+	$: error = download.error;
 	$: complete = download.state === "complete";
 
 	$: filename = download.filename.split(/[\/\\]/).pop();
@@ -84,6 +85,15 @@
 		opacity: 1;
 	}
 
+	.download.paused::before {
+		background-color: #99951e;
+	}
+
+	.download.error::before {
+		background-color: #d73333;
+		opacity: 1;
+	}
+
 	.download.complete::before {
 		background-color: #33991e;
 	}
@@ -118,11 +128,13 @@
 	class="download"
 	style="--progress: {progress}%"
 	class:downloading
+	class:paused
+	class:error
 	class:complete>
 	<button class="file" title={filename} on:click={handleFileClick}>
 		<img class="icon" src={icon} alt="" />{filename}
 	</button>
-	{#if paused}
+	{#if paused || error}
 		<button class="button" on:click={play}>
 			<svg width="20" height="20" viewBox="0 0 24 24">
 				<path d="M8,5.14V19.14L19,12.14L8,5.14Z" fill="currentColor" />
