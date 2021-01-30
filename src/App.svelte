@@ -93,6 +93,8 @@
 		color: #9aa0a6;
 		font-weight: bold;
 		text-align: center;
+		pointer-events: none;
+		user-select: none;
 	}
 </style>
 
