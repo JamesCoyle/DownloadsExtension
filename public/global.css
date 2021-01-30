@@ -1,6 +1,13 @@
 :root {
-	--text-color: white;
-	--background-color: #292a2d;
+	--text-color: #292a2d;
+	--background-color: white;
+}
+
+@media (prefers-color-scheme: dark) {
+	:root {
+		--text-color: white;
+		--background-color: #292a2d;
+	}
 }
 
 * {

@@ -118,7 +118,7 @@ function updateBadge(state, total, complete) {
 }
 
 // disable default download shelf
-chrome.downloads.setShelfEnabled(true)
+chrome.downloads.setShelfEnabled(false)
 
 // listen for updates
 chrome.downloads.onCreated.addListener(addDownload)
