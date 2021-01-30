@@ -1,12 +1,14 @@
 :root {
 	--text-color: #292a2d;
 	--background-color: white;
+	--border-color: hsla(0, 0%, 0%, 0.15);
 }
 
 @media (prefers-color-scheme: dark) {
 	:root {
 		--text-color: white;
 		--background-color: #292a2d;
+		--border-color: hsla(0, 0%, 100%, 0.15);
 	}
 }
 
