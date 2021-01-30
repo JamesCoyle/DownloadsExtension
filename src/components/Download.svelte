@@ -1,57 +1,65 @@
 <script>
-	export let download;
+	export let download
 
-	let icon;
+	let icon
+	let state
 
-	$: downloading = download.state === "in_progress";
-	$: paused = download.paused;
-	$: error = download.error;
-	$: complete = download.state === "complete";
+	$: downloading = download.state === 'in_progress'
+	$: paused = download.paused
+	$: error = download.error
+	$: complete = download.state === 'complete'
+	$: deleted = !download.exists
 
-	$: filename = download.filename.split(/[\/\\]/).pop();
-	$: progress = (download.bytesReceived / download.totalBytes) * 100;
+	$: filename = download.filename.split(/[\/\\]/).pop()
+	$: progress = (download.bytesReceived / download.totalBytes) * 100
 
-	chrome.downloads.getFileIcon(download.id, (i) => (icon = i));
+	$: if (downloading) state = 'Downloading'
+	else if (paused) state = 'Paused'
+	else if (deleted) state = 'Deleted'
+	else if (error) state = 'Failed'
+	else state = ''
+
+	chrome.downloads.getFileIcon(download.id, (i) => (icon = i))
 
 	function handleFileClick(e) {
 		if (e.ctrlKey) {
 			chrome.tabs.create({
-				url: "file:///" + download.filename,
-			});
+				url: 'file:///' + download.filename,
+			})
 		} else if (e.shiftKey) {
-			chrome.downloads.show(download.id);
+			chrome.downloads.show(download.id)
 		} else {
-			chrome.downloads.open(download.id);
+			chrome.downloads.open(download.id)
 		}
 	}
 
 	function play() {
-		console.log("Play");
-		chrome.downloads.resume(download.id);
+		console.log('Play')
+		chrome.downloads.resume(download.id)
 	}
 
 	function pause() {
-		console.log("Pause");
+		console.log('Pause')
 
-		chrome.downloads.pause(download.id);
+		chrome.downloads.pause(download.id)
 	}
 
 	function remove(e) {
 		// cancel download if not complete
-		if (download.state !== "complete") {
-			chrome.downloads.cancel(download.id);
-			return;
+		if (download.state !== 'complete') {
+			chrome.downloads.cancel(download.id)
+			return
 		}
 
 		if (e.ctrlKey) {
 			// delete file and remove from history
 			chrome.downloads.removeFile(download.id, () => {
 				// todo : check for error before erasing
-				chrome.downloads.erase({ id: download.id });
-			});
+				chrome.downloads.erase({ id: download.id })
+			})
 		} else {
 			// clear download from history
-			chrome.downloads.erase({ id: download.id });
+			chrome.downloads.erase({ id: download.id })
 		}
 	}
 </script>
@@ -67,7 +75,7 @@
 	}
 
 	.download::before {
-		content: "";
+		content: '';
 		position: absolute;
 		top: 0;
 		left: -100%;
@@ -99,12 +107,13 @@
 	}
 
 	.file {
+		display: flex;
+		flex-flow: row nowrap;
+		align-items: center;
 		flex: 1 1 auto;
 		height: 100%;
 		padding: 0 1rem;
-		white-space: nowrap;
 		overflow: hidden;
-		text-overflow: ellipsis;
 	}
 
 	.icon {
@@ -112,6 +121,24 @@
 		height: 1rem;
 		margin-right: 1rem;
 		vertical-align: middle;
+	}
+
+	.file-info {
+		overflow: hidden;
+	}
+
+	.filename {
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+
+	.download.deleted .filename {
+		text-decoration: line-through;
+	}
+
+	.state {
+		opacity: 0.6;
 	}
 
 	.button {
@@ -124,15 +151,13 @@
 	}
 </style>
 
-<div
-	class="download"
-	style="--progress: {progress}%"
-	class:downloading
-	class:paused
-	class:error
-	class:complete>
-	<button class="file" title={filename} on:click={handleFileClick}>
-		<img class="icon" src={icon} alt="" />{filename}
+<div class="download" style="--progress: {progress}%" class:downloading class:paused class:error class:complete class:deleted>
+	<button class="file" title={filename} data-state={state} on:click={handleFileClick}>
+		<img class="icon" src={icon} alt="" />
+		<div class="file-info">
+			<div class="filename">{filename}</div>
+			<div class="state">{state}</div>
+		</div>
 	</button>
 	{#if paused || error}
 		<button class="button" on:click={play}>
@@ -149,9 +174,7 @@
 	{/if}
 	<button class="button" on:click={remove}>
 		<svg width="20" height="20" viewBox="0 0 24 24">
-			<path
-				d="M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41Z"
-				fill="currentColor" />
+			<path d="M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41Z" fill="currentColor" />
 		</svg>
 	</button>
 </div>
