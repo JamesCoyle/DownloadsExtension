@@ -4,22 +4,28 @@
 	let icon
 	let state
 
-	$: downloading = download.state === 'in_progress'
-	$: paused = download.paused
-	$: error = download.error
-	$: complete = download.state === 'complete'
-	$: deleted = !download.exists
-
 	$: filename = download.filename.split(/[\/\\]/).pop()
 	$: progress = (download.bytesReceived / download.totalBytes) * 100
+	$: deleted = !download.exists
 
-	$: if (downloading) state = 'Downloading'
-	else if (paused) state = 'Paused'
-	else if (deleted) state = 'Deleted'
-	else if (error) state = 'Failed'
-	else state = ''
-
+	// get icon
 	chrome.downloads.getFileIcon(download.id, (i) => (icon = i))
+
+	// get state from background process
+	$: chrome.storage.local.get(download.id.toString(), (result) => {
+		console.log(result)
+		state = result[download.id]
+	})
+
+	// set state classes
+	$: downloading = state === 'downloading'
+	$: paused = state === 'paused'
+	$: canceled = state === 'canceled'
+	$: error = state === 'error'
+	$: complete = state === 'complete'
+
+	// remove download state if complete
+	$: if (complete) chrome.storage.local.remove(download.id.toString())
 
 	function handleFileClick(e) {
 		if (e.ctrlKey) {
@@ -34,19 +40,16 @@
 	}
 
 	function play() {
-		console.log('Play')
 		chrome.downloads.resume(download.id)
 	}
 
 	function pause() {
-		console.log('Pause')
-
 		chrome.downloads.pause(download.id)
 	}
 
 	function remove(e) {
 		// cancel download if not complete
-		if (download.state !== 'complete') {
+		if (state === 'downloading') {
 			chrome.downloads.cancel(download.id)
 			return
 		}
@@ -65,6 +68,17 @@
 </script>
 
 <style>
+	@keyframes complete {
+		0%,
+		50% {
+			background-color: #33991e;
+		}
+		25%,
+		75% {
+			background-color: transparent;
+		}
+	}
+
 	.download {
 		position: relative;
 		display: flex;
@@ -79,18 +93,18 @@
 		position: absolute;
 		top: 0;
 		left: -100%;
+		display: block;
 		width: 100%;
 		height: 100%;
-		display: block;
+		background-color: transparent;
 		transform: translateX(var(--progress));
-		transition: transform 500ms linear, opacity 250ms ease-out 1s;
-		opacity: 0;
+		transition: transform 500ms linear, background-color 250ms ease-out 1s;
+		opacity: 0.5;
 		z-index: -1;
 	}
 
 	.download.downloading::before {
 		background-color: #3369d7;
-		opacity: 1;
 	}
 
 	.download.paused::before {
@@ -99,11 +113,10 @@
 
 	.download.error::before {
 		background-color: #d73333;
-		opacity: 1;
 	}
 
 	.download.complete::before {
-		background-color: #33991e;
+		animation: complete 1s;
 	}
 
 	.file {
@@ -139,6 +152,7 @@
 
 	.state {
 		opacity: 0.6;
+		text-transform: capitalize;
 	}
 
 	.button {
@@ -151,12 +165,14 @@
 	}
 </style>
 
-<div class="download" style="--progress: {progress}%" class:downloading class:paused class:error class:complete class:deleted>
+<div class="download" class:downloading class:paused class:error class:complete class:deleted style="--progress: {progress}%">
 	<button class="file" title={filename} data-state={state} on:click={handleFileClick}>
 		<img class="icon" src={icon} alt="" />
 		<div class="file-info">
 			<div class="filename">{filename}</div>
-			<div class="state">{state}</div>
+			{#if state}
+				<div class="state">{state}</div>
+			{/if}
 		</div>
 	</button>
 	{#if paused || error}

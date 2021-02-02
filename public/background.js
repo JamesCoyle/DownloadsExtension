@@ -1,116 +1,132 @@
 let popupOpen = false
 
 function update() {
-	// fetch all downloads and watch any in progress
-	chrome.downloads.search({}, (downloads) => {
-		let downloading = 0
-		let paused = 0
-		let error = 0
+	chrome.storage.local.get(null, (states) => {
+		chrome.downloads.search({}, (downloads) => {
+			console.log(states, downloads)
 
-		console.log(downloads)
+			const ids = downloads.map((d) => d.id.toString())
+			const badge = {
+				complete: 0,
+				total: 0,
+				downloading: false,
+				error: false,
+				paused: false,
+			}
 
-		downloads.forEach((download) => {
-			if (download.paused) paused++
-			else if (download.error && download.error != 'USER_CANCELED') error++
-			else {
-				switch (download.state) {
-					case 'in_progress':
-						downloading++
+			let stateIds = Object.keys(states)
+
+			// remove states which don't have matching download
+			stateIds = stateIds.filter((stateId) => {
+				if (ids.includes(stateId)) return true
+
+				chrome.storage.local.remove(stateId)
+			})
+
+			// loop through all downloads and update state
+			downloads.forEach((download) => {
+				const id = download.id.toString()
+				const state = states[id]
+
+				// return if download not created
+				if (!state) return
+
+				// set download state
+				if (download.paused) chrome.storage.local.set({ [id]: 'paused' })
+				else if (download.error) {
+					if (download.error === 'USER_CANCELED') chrome.storage.local.set({ [id]: 'canceled' })
+					else chrome.storage.local.set({ [id]: 'error' })
+				} else {
+					switch (download.state) {
+						case 'in_progress':
+							chrome.storage.local.set({ [id]: 'downloading' })
+							break
+
+						case 'complete':
+							chrome.storage.local.set({ [id]: 'complete' })
+
+							if (popupOpen) return
+
+							// notify user
+							chrome.notifications.create(id, {
+								title: 'Download Complete',
+								message: download.filename,
+								iconUrl: 'images/download128.png',
+								type: 'basic',
+								buttons: [{ title: 'Open' }, { title: 'Show in folder' }],
+							})
+							break
+					}
+				}
+			})
+
+			// update badge
+			stateIds.forEach((id) => {
+				const state = states[id]
+
+				console.log(state)
+
+				switch (state) {
+					case 'error':
+						badge.error = true
+						badge.total++
+						break
+
+					case 'canceled':
+						break
+
+					case 'downloading':
+						badge.downloading = true
+						badge.total++
+						break
+
+					case 'paused':
+						badge.paused = true
+						badge.total++
+
 						break
 
 					case 'complete':
-						setDownloadComplete(download)
+						badge.complete++
+						badge.total++
 						break
 				}
-			}
+			})
+
+			console.log(badge)
+			updateBadge(badge)
+
+			// if any downloads are in progress monitor for updates
+			if (badge.downloading > 0) setTimeout(update, 1000)
 		})
-
-		chrome.storage.local.get('completeDownloads', ({ completeDownloads }) => {
-			const complete = (completeDownloads || []).length
-			const total = downloading + paused + error + complete
-
-			if (error) state = 'error'
-			else if (downloading) state = 'downloading'
-			else if (paused) state = 'paused'
-			else state = 'complete'
-
-			updateBadge(state, total, complete)
-		})
-
-		// if any downloads are in progress monitor for updates
-		if (downloading > 0) setTimeout(update, 1000)
 	})
 }
 
 function addDownload(download) {
-	chrome.storage.local.get('activeDownloads', (result) => {
-		const activeDownloads = result.activeDownloads || []
-		chrome.storage.local.set({ activeDownloads: [...activeDownloads, download.id] })
-		update()
+	console.log('Adding ' + download.id)
+	chrome.storage.local.set({ [download.id.toString()]: 'downloading' })
+	chrome.storage.local.get(null, (result) => {
+		console.log('Added', result)
 	})
+	update()
 }
 
-function setDownloadComplete(download) {
-	chrome.storage.local.get('activeDownloads', (result) => {
-		const activeDownloads = result.activeDownloads || []
-
-		// return if not found
-		if (activeDownloads.indexOf(download.id) < 0) return
-
-		// remove from active
-		chrome.storage.local.set({ activeDownloads: activeDownloads.filter((id) => id !== download.id) })
-
-		if (popupOpen) return
-
-		// add to complete
-		chrome.storage.local.get('completeDownloads', (result) => {
-			let completeDownloads = result.completeDownloads || []
-			if (completeDownloads.indexOf(download.id) < 0) {
-				chrome.storage.local.set({ completeDownloads: [...completeDownloads, download.id] })
-			}
-		})
-
-		// notify user
-		chrome.notifications.create(download.id.toString(), {
-			title: 'Download Complete',
-			message: download.filename,
-			iconUrl: 'images/download128.png',
-			type: 'basic',
-			buttons: [{ title: 'Open' }, { title: 'Show in folder' }],
-		})
-	})
-}
-
-function updateBadge(state, total, complete) {
-	let color = ''
+function updateBadge(state) {
+	let color = '#292a2d'
 	let text = ''
 
-	console.log(state, total, complete)
-
-	switch (state) {
-		case 'downloading':
-			color = '#3369d7'
-			text = complete + '/' + total
-			break
-
-		case 'paused':
-			color = '#99951e'
-			text = complete + '/' + total
-			break
-
-		case 'error':
-			color = '#d73333'
-			text = complete + '/' + total
-			break
-
-		case 'complete':
-			color = '#33991e'
-			text = complete
-
-		default:
-			color = '#5c5c5c'
-			text = ''
-			break
+	if (state.error) {
+		color = '#d73333'
+		text = state.complete + '/' + state.total
+	} else if (state.downloading) {
+		color = '#3369d7'
+		text = state.complete + '/' + state.total
+	} else if (state.paused) {
+		color = '#99951e'
+		text = state.complete + '/' + state.total
+	} else if (state.complete) {
+		color = '#33991e'
+		text = state.complete.toString()
 	}
 
 	chrome.browserAction.setBadgeBackgroundColor({ color })
@@ -130,7 +146,6 @@ chrome.runtime.onConnect.addListener((port) => {
 	if (port.name !== 'popup') return
 
 	popupOpen = true
-	chrome.storage.local.set({ completeDownloads: [] })
 	update()
 
 	port.onDisconnect.addListener(() => {
@@ -151,3 +166,5 @@ chrome.notifications.onButtonClicked.addListener((notificationId, showInFolder) 
 	if (showInFolder) chrome.downloads.show(downloadId)
 	else chrome.downloads.open(downloadId)
 })
+
+update()

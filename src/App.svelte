@@ -6,7 +6,6 @@
 	function updateDownloadList() {
 		chrome.downloads.search({}, (d) => {
 			downloads = d.filter((d) => d.filename && d.incognito == false)
-			console.log(downloads)
 		})
 	}
 
@@ -72,7 +71,7 @@
 		text-align: left;
 		background-color: transparent;
 		border: none;
-		border-top: 1px solid var(--border-color);
+		border-top: 1px solid var(--hover-color);
 		outline: none;
 	}
 
