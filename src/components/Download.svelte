@@ -13,7 +13,6 @@
 
 	// get state from background process
 	$: chrome.storage.local.get(download.id.toString(), (result) => {
-		console.log(result)
 		state = result[download.id]
 	})
 
@@ -170,8 +169,8 @@
 		<img class="icon" src={icon} alt="" />
 		<div class="file-info">
 			<div class="filename">{filename}</div>
-			{#if state}
-				<div class="state">{state}</div>
+			{#if state || deleted}
+				<div class="state">{state || 'Deleted'}</div>
 			{/if}
 		</div>
 	</button>

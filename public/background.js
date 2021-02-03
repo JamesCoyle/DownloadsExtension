@@ -3,8 +3,6 @@ let popupOpen = false
 function update() {
 	chrome.storage.local.get(null, (states) => {
 		chrome.downloads.search({}, (downloads) => {
-			console.log(states, downloads)
-
 			const ids = downloads.map((d) => d.id.toString())
 			const badge = {
 				complete: 0,
@@ -26,45 +24,48 @@ function update() {
 			// loop through all downloads and update state
 			downloads.forEach((download) => {
 				const id = download.id.toString()
-				const state = states[id]
+				let state = states[id]
 
 				// return if download not created
 				if (!state) return
 
-				// set download state
-				if (download.paused) chrome.storage.local.set({ [id]: 'paused' })
+				// determine download state
+				if (download.paused) state = 'paused'
 				else if (download.error) {
-					if (download.error === 'USER_CANCELED') chrome.storage.local.set({ [id]: 'canceled' })
-					else chrome.storage.local.set({ [id]: 'error' })
+					if (download.error === 'USER_CANCELED') {
+						if (download.filename) chrome.storage.local.set({ [id]: 'canceled' })
+						else chrome.downloads.erase({ id: download.id })
+					} else chrome.storage.local.set({ [id]: 'error' })
 				} else {
 					switch (download.state) {
 						case 'in_progress':
-							chrome.storage.local.set({ [id]: 'downloading' })
+							state = 'downloading'
 							break
 
 						case 'complete':
-							chrome.storage.local.set({ [id]: 'complete' })
-
-							if (popupOpen) return
-
-							// notify user
-							chrome.notifications.create(id, {
-								title: 'Download Complete',
-								message: download.filename,
-								iconUrl: 'images/download128.png',
-								type: 'basic',
-								buttons: [{ title: 'Open' }, { title: 'Show in folder' }],
-							})
+							state = 'complete'
 							break
 					}
+				}
+
+				// set download state
+				chrome.storage.local.set({ [id]: state })
+
+				// notify on completion
+				if (state === 'complete' && !popupOpen) {
+					chrome.notifications.create(id, {
+						title: 'Download Complete',
+						message: download.filename,
+						iconUrl: 'images/download128.png',
+						type: 'basic',
+						buttons: [{ title: 'Open' }, { title: 'Show in folder' }],
+					})
 				}
 			})
 
 			// update badge
 			stateIds.forEach((id) => {
 				const state = states[id]
-
-				console.log(state)
 
 				switch (state) {
 					case 'error':
@@ -93,7 +94,6 @@ function update() {
 				}
 			})
 
-			console.log(badge)
 			updateBadge(badge)
 
 			// if any downloads are in progress monitor for updates
@@ -103,11 +103,7 @@ function update() {
 }
 
 function addDownload(download) {
-	console.log('Adding ' + download.id)
 	chrome.storage.local.set({ [download.id.toString()]: 'downloading' })
-	chrome.storage.local.get(null, (result) => {
-		console.log('Added', result)
-	})
 	update()
 }
 
