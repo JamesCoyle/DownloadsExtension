@@ -104,8 +104,8 @@
 	}
 
 	input[type='checkbox'] {
-		width: 1.5rem;
-		height: 1.5rem;
+		width: 1rem;
+		height: 1rem;
 	}
 
 	.header {
@@ -155,9 +155,10 @@
 		flex-flow: row nowrap;
 		justify-content: space-between;
 		align-items: center;
+		min-height: 3rem;
 		margin-bottom: 0.5rem;
 		padding: 0.5rem;
-		font-size: 1.25rem;
+		font-size: 1rem;
 	}
 
 	.center {
