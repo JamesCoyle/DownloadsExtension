@@ -14,10 +14,21 @@ chrome.storage.local.onChanged.addListener((changes) => {
  * Update any local values from the localstorage
  * @param param0 an object with values stored in localstorage
  */
-function updateStoredValues({ theme, notificationsEnabled }) {
+function updateStoredValues({ theme, prefersLightTheme, prefersDarkTheme, notificationsEnabled }) {
 	settings.notificationsEnabled = notificationsEnabled ?? settings.notificationsEnabled
+	
+	// update icon if theme changed
+	if (theme) setIcon(theme, prefersLightTheme, prefersDarkTheme)
+}
 
-	// set icon to match theme
+/**
+ * Set icon to match user's theme
+ */
+function setIcon(theme, light = false, dark = false) {
+	if (theme === 'auto') {
+		theme = (light) ? 'light' : (dark) ? 'dark' : 'default'
+	}
+
 	chrome.browserAction.setIcon({
 		path: {
 			16: `icons/${theme}/icon-16.png`,
