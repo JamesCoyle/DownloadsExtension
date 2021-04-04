@@ -171,7 +171,7 @@
 	}
 </style>
 
-<main>
+<main class={settings.theme}>
 	<div class="header">
 		<h1>Downloads</h1>
 		<button class="settings-button" on:click={() => (settingsPaneOpen = !settingsPaneOpen)}>
@@ -193,7 +193,7 @@
 			</div>
 			<div class="setting-item">
 				<label for="theme-mode">Theme</label>
-				<select name="theme-mode" id="theme-mode" on:blur={updateThemePreference}>
+				<select name="theme-mode" id="theme-mode" on:input={updateThemePreference}>
 					<option value="auto" selected={settings.theme === 'auto'}>Auto detect</option>
 					<option value="light" selected={settings.theme === 'light'}>Light</option>
 					<option value="dark" selected={settings.theme === 'dark'}>Dark</option>

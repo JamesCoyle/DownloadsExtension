@@ -1,11 +1,25 @@
-:root {
+.light {
 	--text-color: #292a2d;
 	--background-color: white;
 	--hover-color: hsla(0, 0%, 0%, 0.15);
 }
 
+.dark {
+	--text-color: white;
+	--background-color: #292a2d;
+	--hover-color: hsla(0, 0%, 100%, 0.15);
+}
+
+@media (prefers-color-scheme: light) {
+	.auto {
+		--text-color: #292a2d;
+		--background-color: white;
+		--hover-color: hsla(0, 0%, 0%, 0.15);
+	}
+}
+
 @media (prefers-color-scheme: dark) {
-	:root {
+	.auto {
 		--text-color: white;
 		--background-color: #292a2d;
 		--hover-color: hsla(0, 0%, 100%, 0.15);
@@ -29,6 +43,9 @@ body {
 	flex-flow: column nowrap;
 	width: 320px;
 	height: 528px;
+}
+
+main {
 	color: var(--text-color);
 	background-color: var(--background-color);
 }
