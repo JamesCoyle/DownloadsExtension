@@ -24,22 +24,8 @@
 		prefersLightScheme: window.matchMedia('(prefers-color-scheme: light)').matches,
 	})
 
-	// chrome.browserAction.setIcon({
-	// path: {
-	// 16: `icons/${theme}/icon-16.png`,
-	// 24: `icons/${theme}/icon-24.png`,
-	// 32: `icons/${theme}/icon-32.png`,
-	// 48: `icons/${theme}/icon-48.png`,
-	// },
-	// })
-
 	// allow background to detect when popup open
-	//chrome.runtime.connect({ name: 'popup' })
-
-	// update the download list when events fire
-	chrome.downloads.onCreated.addListener(updateDownloadList)
-	chrome.downloads.onChanged.addListener(updateDownloadList)
-	chrome.downloads.onErased.addListener(updateDownloadList)
+	chrome.runtime.connect({ name: 'popup' })
 
 	// poll for list changes
 	setInterval(updateDownloadList, 500)
@@ -51,9 +37,10 @@
 	 * Update any local values from the localstorage
 	 * @param param0 an object with values stored in localstorage
 	 */
-	function updateStoredValues({ theme, notificationsEnabled }) {
+	function updateStoredValues({ theme, notifyOnComplete }) {
 		settings.theme = theme ?? settings.theme
-		settings.notificationsEnabled = notificationsEnabled ?? settings.notificationsEnabled
+		settings.notifyOnComplete = notifyOnComplete ?? settings.notifyOnComplete
+		settings.notifyOnError = notifyOnError ?? settings.notifyOnError
 	}
 
 	function updateDownloadList() {
@@ -62,17 +49,20 @@
 		})
 	}
 
-	function openDownloadsTab() {
-		const tab = { url: 'chrome://downloads' }
-		chrome.tabs.create(tab)
+	function updateNotifyOnCompletePreference(event) {
+		chrome.storage.local.set({ notifyOnComplete: event.target.checked })
 	}
 
-	function updateNotificationPreference(event) {
-		chrome.storage.local.set({ notificationsEnabled: event.target.checked })
+	function updateNotifyOnErrorPreference(event) {
+		chrome.storage.local.set({ notifyOnError: event.target.checked })
 	}
 
 	function updateThemePreference(event) {
 		chrome.storage.local.set({ theme: event.target.value })
+	}
+
+	function openDownloadsTab() {
+		chrome.tabs.create({ url: 'chrome://downloads' })
 	}
 </script>
 
@@ -191,8 +181,12 @@
 		</header>
 		<div class="scrollable">
 			<div class="setting-item">
-				<label for="enable-notification">Notify on complete</label>
-				<input id="enable-notification" type="checkbox" checked={settings.notificationsEnabled} on:change={updateNotificationPreference} />
+				<label for="enable-complete-notification">Notify on complete</label>
+				<input id="enable-complete-notification" type="checkbox" checked={settings.notifyOnComplete} on:change={updateNotifyOnCompletePreference} />
+			</div>
+			<div class="setting-item">
+				<label for="enable-error-notification">Notify on error</label>
+				<input id="enable-error-notification" type="checkbox" checked={settings.notifyOnError} on:change={updateNotifyOnErrorPreference} />
 			</div>
 			<div class="setting-item">
 				<label for="theme-mode">Theme</label>
