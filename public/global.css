@@ -2,12 +2,16 @@
 	--text-color: #292a2d;
 	--background-color: white;
 	--hover-color: hsla(0, 0%, 0%, 0.15);
+
+	color-scheme: light;
 }
 
 .dark {
 	--text-color: white;
 	--background-color: #292a2d;
 	--hover-color: hsla(0, 0%, 100%, 0.15);
+
+	color-scheme: dark;
 }
 
 @media (prefers-color-scheme: light) {
@@ -15,6 +19,8 @@
 		--text-color: #292a2d;
 		--background-color: white;
 		--hover-color: hsla(0, 0%, 0%, 0.15);
+
+		color-scheme: light;
 	}
 }
 
@@ -23,6 +29,8 @@
 		--text-color: white;
 		--background-color: #292a2d;
 		--hover-color: hsla(0, 0%, 100%, 0.15);
+
+		color-scheme: dark;
 	}
 }
 

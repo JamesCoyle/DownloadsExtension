@@ -18,17 +18,20 @@
 		updateStoredValues(changes)
 	})
 
-	// set icon to match browser theme
-	const theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'default'
-
-	chrome.browserAction.setIcon({
-		path: {
-			16: `icons/${theme}/icon-16.png`,
-			24: `icons/${theme}/icon-24.png`,
-			32: `icons/${theme}/icon-32.png`,
-			48: `icons/${theme}/icon-48.png`,
-		},
+	// update preffered color scheme
+	chrome.storage.local.set({
+		prefersDarkScheme: window.matchMedia('(prefers-color-scheme: dark)').matches,
+		prefersLightScheme: window.matchMedia('(prefers-color-scheme: light)').matches,
 	})
+
+	// chrome.browserAction.setIcon({
+	// path: {
+	// 16: `icons/${theme}/icon-16.png`,
+	// 24: `icons/${theme}/icon-24.png`,
+	// 32: `icons/${theme}/icon-32.png`,
+	// 48: `icons/${theme}/icon-48.png`,
+	// },
+	// })
 
 	// allow background to detect when popup open
 	//chrome.runtime.connect({ name: 'popup' })
