@@ -1,166 +1,152 @@
-let popupOpen = false
+//#region downloads.js
 
-function update() {
-	chrome.storage.local.get(null, (states) => {
-		chrome.downloads.search({}, (downloads) => {
-			const ids = downloads.map((d) => d.id.toString())
-			const badge = {
-				complete: 0,
-				total: 0,
-				downloading: false,
-				error: false,
-				paused: false,
-			}
+// todo : move to own file when updating to manifest v3
 
-			let stateIds = Object.keys(states)
+const badgeColors = {
+	error: '#d73333',
+	downloading: '#3369d7',
+	paused: '#99951e',
+	complete: '#33991e',
+	default: '#cccccc',
+}
 
-			// remove states which don't have matching download
-			stateIds = stateIds.filter((stateId) => {
-				if (ids.includes(stateId)) return true
+class Downloads {
+	constructor() {
+		this.downloads = {}
 
-				chrome.storage.local.remove(stateId)
-			})
+		// watch for download changes
+		chrome.downloads.onChanged.addListener((delta) => {
+			const { id, error, filename: downloading, paused, endTime: complete } = delta
 
-			// loop through all downloads and update state
-			downloads.forEach((download) => {
-				const id = download.id.toString()
-				let state = states[id]
+			console.log('UPDATE', delta)
 
-				// return if download not created
-				if (!state) return
-
-				// determine download state
-				if (download.paused) state = 'paused'
-				else if (download.error) {
-					if (download.error === 'USER_CANCELED') {
-						if (download.filename) chrome.storage.local.set({ [id]: 'canceled' })
-						else chrome.downloads.erase({ id: download.id })
-					} else chrome.storage.local.set({ [id]: 'error' })
-				} else {
-					switch (download.state) {
-						case 'in_progress':
-							state = 'downloading'
-							break
-
-						case 'complete':
-							state = 'complete'
-							break
-					}
-				}
-
-				// set download state
-				chrome.storage.local.set({ [id]: state })
-
-				// notify on completion
-				if (state === 'complete' && !popupOpen) {
-					chrome.notifications.create(id, {
-						title: 'Download Complete',
-						message: download.filename,
-						iconUrl: 'images/download128.png',
-						type: 'basic',
-						buttons: [{ title: 'Open' }, { title: 'Show in folder' }],
-					})
-				}
-			})
-
-			// update badge
-			stateIds.forEach((id) => {
-				const state = states[id]
-
-				switch (state) {
-					case 'error':
-						badge.error = true
-						badge.total++
-						break
-
-					case 'canceled':
-						break
-
-					case 'downloading':
-						badge.downloading = true
-						badge.total++
-						break
-
-					case 'paused':
-						badge.paused = true
-						badge.total++
-
-						break
-
-					case 'complete':
-						badge.complete++
-						badge.total++
-						break
-				}
-			})
-
-			updateBadge(badge)
-
-			// if any downloads are in progress monitor for updates
-			if (badge.downloading > 0) setTimeout(update, 1000)
+			if (complete) this.updateDownload(id, 'complete')
+			else if (downloading) this.updateDownload(id, 'downloading')
+			else if (paused) this.updateDownload(id, 'paused')
+			else if (error) this.updateDownload(id, 'error')
 		})
-	})
-}
-
-function addDownload(download) {
-	chrome.storage.local.set({ [download.id.toString()]: 'downloading' })
-	update()
-}
-
-function updateBadge(state) {
-	let color = '#292a2d'
-	let text = ''
-
-	if (state.error) {
-		color = '#d73333'
-		text = state.complete + '/' + state.total
-	} else if (state.downloading) {
-		color = '#3369d7'
-		text = state.complete + '/' + state.total
-	} else if (state.paused) {
-		color = '#99951e'
-		text = state.complete + '/' + state.total
-	} else if (state.complete) {
-		color = '#33991e'
-		text = state.complete.toString()
 	}
 
-	chrome.browserAction.setBadgeBackgroundColor({ color })
-	chrome.browserAction.setBadgeText({ text })
+	updateDownload(id, state) {
+		this.downloads[id] = state
+		this.updateBadge()
+	}
+
+	clear() {
+		// remove all completed downloads
+		for (const id in this.downloads) {
+			if (this.downloads[id] === 'complete') delete this.downloads[id]
+		}
+
+		this.updateBadge()
+	}
+
+	/**
+	 * Computes the dominant state, complete count, and total count then updates badge
+	 */
+	updateBadge() {
+		const totals = Object.values(this.downloads).reduce(
+			(totals, state) => {
+				totals.total++
+				totals[state]++
+				return totals
+			},
+			{
+				total: 0,
+				error: 0,
+				downloading: 0,
+				paused: 0,
+				complete: 0,
+			}
+		)
+		const state = totals.error ? 'error' : totals.downloading ? 'downloading' : totals.paused ? 'paused' : totals.complete ? 'complete' : 'default'
+
+		this._updateBadgeColor(state)
+		this._updateBadgeText(totals.total, totals.complete)
+	}
+
+	/**
+	 * Updates the color of the browser action badge
+	 * @param {State} state The dominant state of all downloads (error > downloading > paused > complete)
+	 */
+	_updateBadgeColor(state) {
+		chrome.browserAction.setBadgeBackgroundColor({ color: badgeColors[state] })
+	}
+
+	/**
+	 * Update the text of the browser action badge
+	 * @param {number} total The total number of downloads since last cleared
+	 * @param {number} complete The total number of complete downloads since last cleared
+	 */
+	_updateBadgeText(total, complete) {
+		if (total == 0) chrome.browserAction.setBadgeText({ text: '' })
+		else if (complete === total) chrome.browserAction.setBadgeText({ text: complete.toString() })
+		else chrome.browserAction.setBadgeText({ text: complete + '/' + total })
+	}
 }
 
-// disable default download shelf
-chrome.downloads.setShelfEnabled(false)
+//#endregion
 
-// listen for updates
-chrome.downloads.onCreated.addListener(addDownload)
-chrome.downloads.onChanged.addListener(update)
-chrome.downloads.onErased.addListener(update)
+/**
+ * @typedef {"error", "downloading", "paused", "complete"} State
+ */
+
+const downloads = new Downloads()
+
+const settings = {
+	notificationsEnabled: false,
+}
+
+// get localstorage and keep up to date on changes
+chrome.storage.local.get(null, updateStoredValues)
+chrome.storage.local.onChanged.addListener((changes) => {
+	Object.keys(changes).map((key) => {
+		changes[key] = changes[key].newValue
+	})
+	updateStoredValues(changes)
+})
 
 // detect when popup opened
 chrome.runtime.onConnect.addListener((port) => {
 	if (port.name !== 'popup') return
 
-	popupOpen = true
-	update()
+	downloads.clear()
 
-	port.onDisconnect.addListener(() => {
-		popupOpen = false
-		update()
+	// todo : continuously send message from popup when open
+})
+
+/**
+ * Update any local values from the localstorage
+ * @param param0 an object with values stored in localstorage
+ */
+function updateStoredValues({ notificationsEnabled, theme, prefersLightTheme, prefersDarkTheme, showShelf }) {
+	settings.notificationsEnabled = notificationsEnabled ?? settings.notificationsEnabled
+
+	// update icon if theme changed
+	if (theme !== undefined) updateIcon(theme, prefersLightTheme, prefersDarkTheme)
+
+	// update shelf visibility if changed
+	if (showShelf !== undefined) chrome.downloads.setShelfEnabled(showShelf)
+}
+
+/**
+ *
+ * Set icon to match user's theme
+ * @param {("auto"|"light"|"dark")} theme The users theme preference
+ * @param {boolean} light Light mode prefered
+ * @param {boolean} dark Dark mode prefered
+ */
+function updateIcon(theme, light = false, dark = false) {
+	if (theme === 'auto') {
+		theme = light ? 'light' : dark ? 'dark' : 'default'
+	}
+
+	chrome.browserAction.setIcon({
+		path: {
+			16: `icons/${theme}/icon-16.png`,
+			24: `icons/${theme}/icon-24.png`,
+			32: `icons/${theme}/icon-32.png`,
+			48: `icons/${theme}/icon-48.png`,
+		},
 	})
-})
-
-// open file on notification click
-chrome.notifications.onClicked.addListener((notificationId) => {
-	const downloadId = parseInt(notificationId)
-	chrome.downloads.open(downloadId)
-})
-
-// open file or folder when notification buttons clicked
-chrome.notifications.onButtonClicked.addListener((notificationId, showInFolder) => {
-	const downloadId = parseInt(notificationId)
-	if (showInFolder) chrome.downloads.show(downloadId)
-	else chrome.downloads.open(downloadId)
-})
-
-update()
+}
