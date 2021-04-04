@@ -112,10 +112,7 @@ chrome.runtime.onConnect.addListener((port) => {
 
 	downloads.clear()
 
-	/* port.onDisconnect.addListener(() => {
-		popupOpen = false
-		downloads.clear()
-	}) */
+	// todo : continuously send message from popup when open
 })
 
 /**
