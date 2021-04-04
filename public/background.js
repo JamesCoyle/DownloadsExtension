@@ -28,9 +28,16 @@ class Downloads {
 	}
 
 	updateDownload(id, state) {
-		console.log('UpdateDownload', id, state)
-
 		this.downloads[id] = state
+		this.updateBadge()
+	}
+
+	clear() {
+		// remove all completed downloads
+		for (const id in this.downloads) {
+			if (this.downloads[id] === 'complete') delete this.downloads[id]
+		}
+
 		this.updateBadge()
 	}
 
@@ -63,8 +70,6 @@ class Downloads {
 	 * @param {State} state The dominant state of all downloads (error > downloading > paused > complete)
 	 */
 	_updateBadgeColor(state) {
-		console.log('UpdateBadgeColor', state)
-
 		chrome.browserAction.setBadgeBackgroundColor({ color: badgeColors[state] })
 	}
 
@@ -74,8 +79,6 @@ class Downloads {
 	 * @param {number} complete The total number of complete downloads since last cleared
 	 */
 	_updateBadgeText(total, complete) {
-		console.log('UpdateBadgeText', total, complete)
-
 		if (total == 0) chrome.browserAction.setBadgeText({ text: '' })
 		else if (complete === total) chrome.browserAction.setBadgeText({ text: complete.toString() })
 		else chrome.browserAction.setBadgeText({ text: complete + '/' + total })
@@ -103,13 +106,16 @@ chrome.storage.local.onChanged.addListener((changes) => {
 	updateStoredValues(changes)
 })
 
-// listen for updates
-chrome.downloads.onCreated.addListener((item) => {
-	//console.log('CREATED', item)
-})
+// detect when popup opened
+chrome.runtime.onConnect.addListener((port) => {
+	if (port.name !== 'popup') return
 
-chrome.downloads.onErased.addListener((id) => {
-	//console.log('ERASED', id)
+	downloads.clear()
+
+	/* port.onDisconnect.addListener(() => {
+		popupOpen = false
+		downloads.clear()
+	}) */
 })
 
 /**
