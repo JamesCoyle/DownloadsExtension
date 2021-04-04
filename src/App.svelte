@@ -37,7 +37,7 @@
 	 * Update any local values from the localstorage
 	 * @param param0 an object with values stored in localstorage
 	 */
-	function updateStoredValues({ theme, notifyOnComplete }) {
+	function updateStoredValues({ theme, notifyOnComplete, notifyOnError }) {
 		settings.theme = theme ?? settings.theme
 		settings.notifyOnComplete = notifyOnComplete ?? settings.notifyOnComplete
 		settings.notifyOnError = notifyOnError ?? settings.notifyOnError
