@@ -57,6 +57,10 @@
 		chrome.storage.local.set({ notifyOnError: event.target.checked })
 	}
 
+	function updateShelfPreference(event) {
+		chrome.storage.local.set({ showShelf: event.target.checked })
+	}
+
 	function updateThemePreference(event) {
 		chrome.storage.local.set({ theme: event.target.value })
 	}
@@ -187,6 +191,10 @@
 			<div class="setting-item">
 				<label for="enable-error-notification">Notify on error</label>
 				<input id="enable-error-notification" type="checkbox" checked={settings.notifyOnError} on:change={updateNotifyOnErrorPreference} />
+			</div>
+			<div class="setting-item">
+				<label for="enable-shelf">Show download shelf</label>
+				<input id="enable-shelf" type="checkbox" checked={settings.showShelf} on:change={updateShelfPreference} />
 			</div>
 			<div class="setting-item">
 				<label for="theme-mode">Theme</label>
