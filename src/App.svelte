@@ -9,6 +9,9 @@
 		notificationsEnabled: false,
 	}
 
+	// connect to background script
+	const connection = chrome.extension.connect()
+
 	// get localstorage and keep up to date on changes
 	chrome.storage.local.get(null, updateStoredValues)
 	chrome.storage.local.onChanged.addListener((changes) => {
@@ -23,9 +26,6 @@
 		prefersDarkScheme: window.matchMedia('(prefers-color-scheme: dark)').matches,
 		prefersLightScheme: window.matchMedia('(prefers-color-scheme: light)').matches,
 	})
-
-	// allow background to detect when popup open
-	chrome.runtime.connect({ name: 'popup' })
 
 	// poll for list changes
 	setInterval(updateDownloadList, 500)
@@ -47,6 +47,9 @@
 		chrome.downloads.search({}, (d) => {
 			downloads = d.filter((d) => d.filename && d.incognito == false)
 		})
+
+		// notify background to keep clearing complete downloads
+		connection.postMessage('Still alive')
 	}
 
 	function updateNotifyOnCompletePreference(event) {

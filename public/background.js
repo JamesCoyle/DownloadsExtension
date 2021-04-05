@@ -106,13 +106,11 @@ chrome.storage.local.onChanged.addListener((changes) => {
 	updateStoredValues(changes)
 })
 
-// detect when popup opened
-chrome.runtime.onConnect.addListener((port) => {
-	if (port.name !== 'popup') return
-
-	downloads.clear()
-
-	// todo : continuously send message from popup when open
+// clear completed downloads when popup open
+chrome.extension.onConnect.addListener((port) => {
+	port.onMessage.addListener(() => {
+		downloads.clear()
+	})
 })
 
 /**
