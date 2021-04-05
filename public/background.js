@@ -13,6 +13,10 @@ const badgeColors = {
 class Downloads {
 	constructor() {
 		this.downloads = {}
+		this.settings = {
+			notifyOnComplete: false,
+			notifyOnError: false,
+		}
 
 		// watch for download changes
 		chrome.downloads.onChanged.addListener((delta) => {
@@ -30,12 +34,38 @@ class Downloads {
 	updateDownload(id, state) {
 		this.downloads[id] = state
 		this.updateBadge()
+
+		switch (state) {
+			case 'error':
+				if (this.settings.notifyOnError)
+					chrome.notifications.create(id.toString(), {
+						title: 'Download Error',
+						message: 'An error occured and the download could not be completed.',
+						iconUrl: 'images/download128.png',
+						type: 'basic',
+					})
+				break
+
+			case 'complete':
+				if (this.settings.notifyOnComplete)
+					chrome.notifications.create(id.toString(), {
+						title: 'Download Complete',
+						message: 'Your download completed successfully.',
+						iconUrl: 'images/download128.png',
+						type: 'basic',
+						buttons: [{ title: 'Open' }, { title: 'Show in folder' }],
+					})
+				break
+		}
 	}
 
-	clear() {
-		// remove all completed downloads
-		for (const id in this.downloads) {
-			if (this.downloads[id] === 'complete') delete this.downloads[id]
+	clear(id) {
+		if (id !== undefined) {
+			delete this.downloads[id]
+		} else {
+			for (const id in this.downloads) {
+				if (this.downloads[id] === 'complete') delete this.downloads[id]
+			}
 		}
 
 		this.updateBadge()
@@ -94,8 +124,6 @@ class Downloads {
 const downloads = new Downloads()
 
 const settings = {
-	notifyOnComplete: false,
-	notifyOnError: false,
 	preferedTheme: 'default',
 }
 
@@ -129,11 +157,9 @@ chrome.permissions.onAdded.addListener(({ permissions }) => {
  * @param param0 an object with values stored in localstorage
  */
 function updateStoredValues({ notifyOnComplete, notifyOnError, theme, preferedTheme, showShelf }) {
-	console.log(notifyOnComplete, notifyOnError)
+	downloads.settings.notifyOnComplete = notifyOnComplete ?? downloads.settings.notifyOnComplete
+	downloads.settings.notifyOnError = notifyOnError ?? downloads.settings.notifyOnError
 
-	settings.notifyOnComplete = notifyOnComplete ?? settings.notifyOnComplete
-	settings.notifyOnError = notifyOnError ?? settings.notifyOnError
-	settings.notifyOnError = notifyOnError ?? settings.notifyOnError
 	settings.preferedTheme = preferedTheme ?? settings.preferedTheme
 
 	// update icon if theme changed
@@ -173,6 +199,7 @@ function setNotificationEventHandlers() {
 	chrome.notifications.onClicked.addListener((notificationId) => {
 		const downloadId = parseInt(notificationId)
 		chrome.downloads.open(downloadId)
+		downloads.clear(parseInt(downloadId))
 	})
 
 	// open file or folder when notification buttons clicked
@@ -180,5 +207,6 @@ function setNotificationEventHandlers() {
 		const downloadId = parseInt(notificationId)
 		if (showInFolder) chrome.downloads.show(downloadId)
 		else chrome.downloads.open(downloadId)
+		downloads.clear(parseInt(downloadId))
 	})
 }
