@@ -6,7 +6,9 @@
 
 	let settings = {
 		theme: 'auto',
-		notificationsEnabled: false,
+		notifyOnComplete: false,
+		notifyOnError: false,
+		showShelf: false,
 	}
 
 	// connect to background script
@@ -37,10 +39,11 @@
 	 * Update any local values from the localstorage
 	 * @param param0 an object with values stored in localstorage
 	 */
-	function updateStoredValues({ theme, notifyOnComplete, notifyOnError }) {
+	function updateStoredValues({ theme, notifyOnComplete, notifyOnError, showShelf }) {
 		settings.theme = theme ?? settings.theme
 		settings.notifyOnComplete = notifyOnComplete ?? settings.notifyOnComplete
 		settings.notifyOnError = notifyOnError ?? settings.notifyOnError
+		settings.showShelf = showShelf ?? settings.showShelf
 	}
 
 	function updateDownloadList() {
