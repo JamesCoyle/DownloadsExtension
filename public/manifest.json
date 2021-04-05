@@ -15,7 +15,9 @@
 		"downloads",
 		"downloads.open",
 		"downloads.shelf",
-		"storage",
+		"storage"
+	],
+	"optional_permissions": [
 		"notifications"
 	],
 	"browser_action": {

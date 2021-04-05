@@ -25,8 +25,7 @@
 
 	// update preffered color scheme
 	chrome.storage.local.set({
-		prefersDarkScheme: window.matchMedia('(prefers-color-scheme: dark)').matches,
-		prefersLightScheme: window.matchMedia('(prefers-color-scheme: light)').matches,
+		preferedTheme: window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'default',
 	})
 
 	// poll for list changes
@@ -55,12 +54,18 @@
 		connection.postMessage('Still alive')
 	}
 
-	function updateNotifyOnCompletePreference(event) {
-		chrome.storage.local.set({ notifyOnComplete: event.target.checked })
-	}
-
-	function updateNotifyOnErrorPreference(event) {
-		chrome.storage.local.set({ notifyOnError: event.target.checked })
+	function updateNotifyPreference({ target: { checked: enable, name: type } }) {
+		if (enable) {
+			requestNotificationPermission(
+				() => chrome.storage.local.set({ [type]: true }),
+				() => {
+					alert('Notifications permission must be granted to enable notifications')
+					event.target.checked = false
+				}
+			)
+		} else {
+			chrome.storage.local.set({ [type]: false })
+		}
 	}
 
 	function updateShelfPreference(event) {
@@ -73,6 +78,18 @@
 
 	function openDownloadsTab() {
 		chrome.tabs.create({ url: 'chrome://downloads' })
+	}
+
+	function requestNotificationPermission(success, rejected) {
+		chrome.permissions.request(
+			{
+				permissions: ['notifications'],
+			},
+			(granted) => {
+				if (granted) success()
+				else rejected()
+			}
+		)
 	}
 </script>
 
@@ -192,11 +209,11 @@
 		<div class="scrollable">
 			<div class="setting-item">
 				<label for="enable-complete-notification">Notify on complete</label>
-				<input id="enable-complete-notification" type="checkbox" checked={settings.notifyOnComplete} on:change={updateNotifyOnCompletePreference} />
+				<input id="enable-complete-notification" type="checkbox" name="notifyOnComplete" checked={settings.notifyOnComplete} on:change={updateNotifyPreference} />
 			</div>
 			<div class="setting-item">
 				<label for="enable-error-notification">Notify on error</label>
-				<input id="enable-error-notification" type="checkbox" checked={settings.notifyOnError} on:change={updateNotifyOnErrorPreference} />
+				<input id="enable-error-notification" type="checkbox" name="notifyOnError" checked={settings.notifyOnError} on:change={updateNotifyPreference} />
 			</div>
 			<div class="setting-item">
 				<label for="enable-shelf">Show download shelf</label>
