@@ -59,14 +59,19 @@ class Downloads {
 		}
 	}
 
-	clear(id) {
-		if (id !== undefined) {
-			delete this.downloads[id]
-		} else {
-			for (const id in this.downloads) {
-				if (this.downloads[id] === 'complete') delete this.downloads[id]
+	clearAll() {
+		for (const id in this.downloads) {
+			if (this.downloads[id] === 'complete') {
+				delete this.downloads[id]
+				if (chrome.notifications) chrome.notifications.clear(id)
 			}
 		}
+
+		this.updateBadge()
+	}
+
+	clear(id) {
+		delete this.downloads[id]
 
 		this.updateBadge()
 	}
@@ -139,7 +144,7 @@ chrome.storage.local.onChanged.addListener((changes) => {
 // clear completed downloads when popup open
 chrome.extension.onConnect.addListener((port) => {
 	port.onMessage.addListener(() => {
-		downloads.clear()
+		downloads.clearAll()
 	})
 })
 
