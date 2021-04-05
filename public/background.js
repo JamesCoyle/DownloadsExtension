@@ -27,7 +27,7 @@ class Downloads {
 			if (complete) this.updateDownload(id, 'complete')
 			else if (downloading) this.updateDownload(id, 'downloading')
 			else if (paused) this.updateDownload(id, 'paused')
-			else if (error) this.updateDownload(id, 'error')
+			else if (error && error !== 'USER_CANCELED') this.updateDownload(id, 'error')
 		})
 	}
 
