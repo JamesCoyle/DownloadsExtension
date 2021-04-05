@@ -13,6 +13,10 @@ const badgeColors = {
 class Downloads {
 	constructor() {
 		this.downloads = {}
+		this.settings = {
+			notifyOnComplete: false,
+			notifyOnError: false,
+		}
 
 		// watch for download changes
 		chrome.downloads.onChanged.addListener((delta) => {
@@ -30,13 +34,44 @@ class Downloads {
 	updateDownload(id, state) {
 		this.downloads[id] = state
 		this.updateBadge()
+
+		switch (state) {
+			case 'error':
+				if (this.settings.notifyOnError)
+					chrome.notifications.create(id.toString(), {
+						title: 'Download Error',
+						message: 'An error occured and the download could not be completed.',
+						iconUrl: 'images/download128.png',
+						type: 'basic',
+					})
+				break
+
+			case 'complete':
+				if (this.settings.notifyOnComplete)
+					chrome.notifications.create(id.toString(), {
+						title: 'Download Complete',
+						message: 'Your download completed successfully.',
+						iconUrl: 'images/download128.png',
+						type: 'basic',
+						buttons: [{ title: 'Open' }, { title: 'Show in folder' }],
+					})
+				break
+		}
 	}
 
-	clear() {
-		// remove all completed downloads
+	clearAll() {
 		for (const id in this.downloads) {
-			if (this.downloads[id] === 'complete') delete this.downloads[id]
+			if (this.downloads[id] === 'complete') {
+				delete this.downloads[id]
+				if (chrome.notifications) chrome.notifications.clear(id)
+			}
 		}
+
+		this.updateBadge()
+	}
+
+	clear(id) {
+		delete this.downloads[id]
 
 		this.updateBadge()
 	}
@@ -94,7 +129,7 @@ class Downloads {
 const downloads = new Downloads()
 
 const settings = {
-	notificationsEnabled: false,
+	preferedTheme: 'default',
 }
 
 // get localstorage and keep up to date on changes
@@ -106,27 +141,37 @@ chrome.storage.local.onChanged.addListener((changes) => {
 	updateStoredValues(changes)
 })
 
-// detect when popup opened
-chrome.runtime.onConnect.addListener((port) => {
-	if (port.name !== 'popup') return
+// clear completed downloads when popup open
+chrome.extension.onConnect.addListener((port) => {
+	port.onMessage.addListener(() => {
+		downloads.clearAll()
+	})
+})
 
-	downloads.clear()
-
-	// todo : continuously send message from popup when open
+// set notification handlers when allowed
+chrome.permissions.contains({ permissions: ['notifications'] }, (allowed) => {
+	if (!allowed) return
+	setNotificationEventHandlers()
+})
+chrome.permissions.onAdded.addListener(({ permissions }) => {
+	if (permissions.includes('notifications')) setNotificationEventHandlers()
 })
 
 /**
  * Update any local values from the localstorage
  * @param param0 an object with values stored in localstorage
  */
-function updateStoredValues({ notificationsEnabled, theme, prefersLightTheme, prefersDarkTheme, showShelf }) {
-	settings.notificationsEnabled = notificationsEnabled ?? settings.notificationsEnabled
+function updateStoredValues({ notifyOnComplete, notifyOnError, theme, preferedTheme, showShelf }) {
+	downloads.settings.notifyOnComplete = notifyOnComplete ?? downloads.settings.notifyOnComplete
+	downloads.settings.notifyOnError = notifyOnError ?? downloads.settings.notifyOnError
+
+	settings.preferedTheme = preferedTheme ?? settings.preferedTheme
 
 	// update icon if theme changed
-	if (theme !== undefined) updateIcon(theme, prefersLightTheme, prefersDarkTheme)
+	if (theme !== undefined) updateIcon(theme)
 
 	// update shelf visibility if changed
-	if (showShelf !== undefined) chrome.downloads.setShelfEnabled(showShelf)
+	if (showShelf !== undefined) chrome.downloads.setShelfEnabled(showShelf || false)
 }
 
 /**
@@ -136,17 +181,37 @@ function updateStoredValues({ notificationsEnabled, theme, prefersLightTheme, pr
  * @param {boolean} light Light mode prefered
  * @param {boolean} dark Dark mode prefered
  */
-function updateIcon(theme, light = false, dark = false) {
-	if (theme === 'auto') {
-		theme = light ? 'light' : dark ? 'dark' : 'default'
-	}
+function updateIcon(theme) {
+	const folder = theme === 'auto' ? settings.preferedTheme : theme
 
 	chrome.browserAction.setIcon({
 		path: {
-			16: `icons/${theme}/icon-16.png`,
-			24: `icons/${theme}/icon-24.png`,
-			32: `icons/${theme}/icon-32.png`,
-			48: `icons/${theme}/icon-48.png`,
+			16: `icons/${folder}/icon-16.png`,
+			24: `icons/${folder}/icon-24.png`,
+			32: `icons/${folder}/icon-32.png`,
+			48: `icons/${folder}/icon-48.png`,
 		},
+	})
+}
+
+/**
+ * Set the listeners to handle notification click events
+ */
+function setNotificationEventHandlers() {
+	console.log('notification handlers set')
+
+	// open file on notification click
+	chrome.notifications.onClicked.addListener((notificationId) => {
+		const downloadId = parseInt(notificationId)
+		chrome.downloads.open(downloadId)
+		downloads.clear(parseInt(downloadId))
+	})
+
+	// open file or folder when notification buttons clicked
+	chrome.notifications.onButtonClicked.addListener((notificationId, showInFolder) => {
+		const downloadId = parseInt(notificationId)
+		if (showInFolder) chrome.downloads.show(downloadId)
+		else chrome.downloads.open(downloadId)
+		downloads.clear(parseInt(downloadId))
 	})
 }

@@ -2,7 +2,6 @@
 	export let download
 
 	let icon
-	let state
 
 	$: filename = download.filename.split(/[\/\\]/).pop()
 	$: progress = (download.bytesReceived / download.totalBytes) * 100
@@ -11,20 +10,11 @@
 	// get icon
 	chrome.downloads.getFileIcon(download.id, (i) => (icon = i))
 
-	// get state from background process
-	$: chrome.storage.local.get(download.id.toString(), (result) => {
-		state = result[download.id]
-	})
-
 	// set state classes
-	$: downloading = state === 'downloading'
-	$: paused = state === 'paused'
-	$: canceled = state === 'canceled'
-	$: error = state === 'error'
-	$: complete = state === 'complete'
 
-	// remove download state if complete
-	$: if (complete) chrome.storage.local.remove(download.id.toString())
+	// todo : pull data from download
+
+	$: state = download.error ? 'error' : download.endTime ? 'complete' : download.paused ? 'paused' : 'downloading'
 
 	function handleFileClick(e) {
 		if (e.ctrlKey) {
@@ -85,6 +75,7 @@
 		align-items: center;
 		width: 100%;
 		height: 40px;
+		z-index: 1;
 	}
 
 	.download::before {
@@ -97,7 +88,7 @@
 		height: 100%;
 		background-color: transparent;
 		transform: translateX(var(--progress));
-		transition: transform 500ms linear, background-color 250ms ease-out 1s;
+		transition: transform 500ms linear, background-color 100ms ease-out;
 		opacity: 0.5;
 		z-index: -1;
 	}
@@ -164,23 +155,23 @@
 	}
 </style>
 
-<div class="download" class:downloading class:paused class:error class:complete class:deleted style="--progress: {progress}%">
+<div class="download {state}" style="--progress: {progress}%">
 	<button class="file" title={filename} data-state={state} on:click={handleFileClick}>
 		<img class="icon" src={icon} alt="" />
 		<div class="file-info">
 			<div class="filename">{filename}</div>
-			{#if state || deleted}
+			{#if state !== 'complete' || deleted}
 				<div class="state">{state || 'Deleted'}</div>
 			{/if}
 		</div>
 	</button>
-	{#if paused || error}
+	{#if ['error', 'paused'].includes(state)}
 		<button class="button" on:click={play}>
 			<svg width="20" height="20" viewBox="0 0 24 24">
 				<path d="M8,5.14V19.14L19,12.14L8,5.14Z" fill="currentColor" />
 			</svg>
 		</button>
-	{:else if downloading}
+	{:else if state === 'downloading'}
 		<button class="button" on:click={pause}>
 			<svg width="20" height="20" viewBox="0 0 24 24">
 				<path d="M14,19H18V5H14M6,19H10V5H6V19Z" fill="currentColor" />
