@@ -126,7 +126,7 @@ function updateStoredValues({ notificationsEnabled, theme, prefersLightTheme, pr
 	if (theme !== undefined) updateIcon(theme, prefersLightTheme, prefersDarkTheme)
 
 	// update shelf visibility if changed
-	if (showShelf !== undefined) chrome.downloads.setShelfEnabled(showShelf)
+	if (showShelf !== undefined) chrome.downloads.setShelfEnabled(showShelf || false)
 }
 
 /**
