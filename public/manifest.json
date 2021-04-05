@@ -1,7 +1,7 @@
 {
 	"name": "Download Manager",
 	"short_name": "Downloads",
-	"version": "2.0",
+	"version": "2.1",
 	"description": "A less intrusive way to access your recent downloads",
 	"icons": {
 		"128": "images/download128.png",
