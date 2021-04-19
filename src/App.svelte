@@ -78,6 +78,10 @@
 		chrome.storage.local.set({ theme: event.target.value })
 	}
 
+	function updateIconPreference(event) {
+		chrome.storage.local.set({ icon: event.target.value })
+	}
+
 	function openDownloadsTab() {
 		chrome.tabs.create({ url: 'chrome://downloads' })
 	}
@@ -246,6 +250,15 @@
 					<option value="auto" selected={settings.theme === 'auto'}>Auto detect</option>
 					<option value="light" selected={settings.theme === 'light'}>Light</option>
 					<option value="dark" selected={settings.theme === 'dark'}>Dark</option>
+				</select>
+			</div>
+			<div class="setting-item">
+				<label for="icon">Icon</label>
+				<select name="icon" id="icon" on:input={updateIconPreference}>
+					<option value="auto" selected={settings.icon === 'auto'}>Match theme</option>
+					<option value="default" selected={settings.icon === 'default'}>Blue</option>
+					<option value="light" selected={settings.icon === 'light'}>Dark Gray</option>
+					<option value="dark" selected={settings.icon === 'dark'}>White</option>
 				</select>
 			</div>
 		</div>

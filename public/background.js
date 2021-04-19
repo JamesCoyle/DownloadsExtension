@@ -129,7 +129,9 @@ class Downloads {
 const downloads = new Downloads()
 
 const settings = {
+	theme: null,
 	preferedTheme: 'default',
+	icon: 'auto',
 }
 
 // get localstorage and keep up to date on changes
@@ -161,14 +163,16 @@ chrome.permissions.onAdded.addListener(({ permissions }) => {
  * Update any local values from the localstorage
  * @param param0 an object with values stored in localstorage
  */
-function updateStoredValues({ notifyOnComplete, notifyOnError, theme, preferedTheme, showShelf }) {
+function updateStoredValues({ notifyOnComplete, notifyOnError, theme, preferedTheme, icon, showShelf }) {
 	downloads.settings.notifyOnComplete = notifyOnComplete ?? downloads.settings.notifyOnComplete
 	downloads.settings.notifyOnError = notifyOnError ?? downloads.settings.notifyOnError
 
+	settings.theme = theme ?? settings.theme
 	settings.preferedTheme = preferedTheme ?? settings.preferedTheme
+	settings.icon = icon ?? settings.icon
 
 	// update icon if theme changed
-	if (theme !== undefined) updateIcon(theme)
+	if (theme !== undefined || icon !== undefined) updateIcon()
 
 	// update shelf visibility if changed
 	if (showShelf !== undefined) chrome.downloads.setShelfEnabled(showShelf || false)
@@ -181,8 +185,8 @@ function updateStoredValues({ notifyOnComplete, notifyOnError, theme, preferedTh
  * @param {boolean} light Light mode prefered
  * @param {boolean} dark Dark mode prefered
  */
-function updateIcon(theme) {
-	const folder = theme === 'auto' ? settings.preferedTheme : theme
+function updateIcon() {
+	const folder = settings.icon !== 'auto' ? settings.icon : settings.theme !== 'auto' ? settings.theme : settings.preferedTheme
 
 	chrome.browserAction.setIcon({
 		path: {
