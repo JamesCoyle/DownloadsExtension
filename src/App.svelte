@@ -1,15 +1,16 @@
 <script>
 	import Download from './components/Download.svelte'
 
-	let downloads = []
-	let settingsPaneOpen = false
-
-	let settings = {
+	const settings = {
 		theme: 'auto',
 		notifyOnComplete: false,
 		notifyOnError: false,
 		showShelf: false,
 	}
+
+	const downloads = []
+	let settingsPaneOpen = false
+
 
 	// connect to background script
 	const connection = chrome.extension.connect()
