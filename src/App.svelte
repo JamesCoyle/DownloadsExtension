@@ -235,9 +235,9 @@
 				<label for="icon">Icon</label>
 				<select name="icon" id="icon" on:input={updateIconPreference}>
 					<option value="auto" selected={settings.icon === 'auto'}>Match theme</option>
-					<option value="blue" selected={settings.icon === 'blue'}>Blue</option>
-					<option value="light" selected={settings.icon === 'light'}>Light</option>
-					<option value="dark" selected={settings.icon === 'dark'}>Dark</option>
+					<option value="default" selected={settings.icon === 'default'}>Blue</option>
+					<option value="light" selected={settings.icon === 'light'}>Dark Gray</option>
+					<option value="dark" selected={settings.icon === 'dark'}>White</option>
 				</select>
 			</div>
 		</div>
