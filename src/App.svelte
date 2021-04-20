@@ -8,7 +8,7 @@
 		showShelf: false,
 	}
 
-	const hints = ['Notifications can be enabled or disabled via the settings menu', 'Change the look and feel using the theme and icon switcher in the settings menu', 'Hold Ctrl while clicking on the downloaded file to open that file in a new tab', 'Hold Shift while clicking on the downloaded file to open the folder it is within', 'Hold Ctrl and click on the cross to delete the downloaded file and clear the download', 'Support development by <a href="https://www.buymeacoffee.com/JamesCoyle" target="_blank">donating</a> and sharing with your friends']
+	const hints = ['Notifications can be enabled or disabled via the settings menu', 'Change the look and feel using the theme and icon switcher in the settings menu', 'Ctrl+Click on the downloaded file to open that file in a new tab', 'Shift+Click on the downloaded file to open the folder it is within', 'Ctrl+Click on the cross to delete the downloaded file and clear the download', 'Support development by <a href="https://www.buymeacoffee.com/JamesCoyle" target="_blank">donating</a>']
 
 	let downloads = []
 	let settingsPaneOpen = false
