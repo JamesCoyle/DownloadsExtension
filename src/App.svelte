@@ -48,7 +48,7 @@
 	}
 
 	function updateDownloadList() {
-		chrome.downloads.search({}, (d) => {
+		chrome.downloads.search({ limit: 100, orderBy: ['-startTime'] }, (d) => {
 			downloads = d.filter((d) => d.filename && d.incognito == false)
 		})
 
