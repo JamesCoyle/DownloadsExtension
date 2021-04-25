@@ -1,5 +1,5 @@
 {
-	"manifest_version": 2,
+	"manifest_version": 3,
 	"name": "Download Manager",
 	"short_name": "Downloads",
 	"version": "2.2",
@@ -21,7 +21,7 @@
 	"optional_permissions": [
 		"notifications"
 	],
-	"browser_action": {
+	"action": {
 		"default_popup": "index.html",
 		"default_title": "Downloads",
 		"default_icon": {
@@ -32,9 +32,6 @@
 		}
 	},
 	"background": {
-		"scripts": [
-			"background.js"
-		],
-		"persistent": false
+		"service_worker": "background.js"
 	}
 }

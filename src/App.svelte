@@ -13,9 +13,6 @@
 	let downloads = []
 	let settingsPaneOpen = false
 
-	// connect to background script
-	const connection = chrome.extension.connect()
-
 	// get localstorage and keep up to date on changes
 	chrome.storage.local.get(null, updateStoredValues)
 	chrome.storage.local.onChanged.addListener((changes) => {
@@ -53,7 +50,7 @@
 		})
 
 		// notify background to keep clearing complete downloads
-		connection.postMessage('Still alive')
+		chrome.runtime.sendMessage({ popupOpen: true })
 	}
 
 	function updateNotifyPreference({ target: { checked: enable, name: type } }) {
