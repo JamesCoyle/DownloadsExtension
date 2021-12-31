@@ -57,7 +57,7 @@
 				chrome.downloads.cancel(download.id)
 			},
 			condition() {
-				return state === 'downloading'
+				return ['downloading', 'error', 'paused'].includes(state)
 			},
 		},
 		{
