@@ -2,6 +2,7 @@ lockfileVersion: 5.3
 
 specifiers:
   '@jamescoyle/prettier-config': ^1.1.0
+  '@mdi/js': ^6.5.95
   '@rollup/plugin-commonjs': ^17.1.0
   '@rollup/plugin-node-resolve': ^11.2.1
   rollup: ^2.62.0
@@ -10,6 +11,9 @@ specifiers:
   rollup-plugin-svelte: ^7.1.0
   rollup-plugin-terser: ^7.0.2
   svelte: ^3.44.3
+
+dependencies:
+  '@mdi/js': 6.5.95
 
 devDependencies:
   '@jamescoyle/prettier-config': 1.1.0
@@ -48,6 +52,10 @@ packages:
   /@jamescoyle/prettier-config/1.1.0:
     resolution: {integrity: sha512-Syljy8lnVrpTNir2NVqoeQ+kDHWoBt4uGSr8PA3wwa306GRsKyjDDQkHqtCD0eApIzm3T8IycNuDlAtXZoXyPQ==}
     dev: true
+
+  /@mdi/js/6.5.95:
+    resolution: {integrity: sha512-x/bwEoAGP+Mo10Dfk5audNIPi7Yz8ZBrILcbXLW3ShOI/njpgodzpgpC2WYK3D2ZSC392peRRemIFb/JsyzzYQ==}
+    dev: false
 
   /@rollup/plugin-commonjs/17.1.0_rollup@2.62.0:
     resolution: {integrity: sha512-PoMdXCw0ZyvjpCMT5aV4nkL0QywxP29sODQsSGeDpr/oI49Qq9tRtAsb/LbYbDzFlOydVEqHmmZWFtXJEAX9ew==}

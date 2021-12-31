@@ -16,5 +16,8 @@
 		"rollup-plugin-terser": "^7.0.2",
 		"svelte": "^3.44.3"
 	},
-	"prettier": "@jamescoyle/prettier-config"
+	"prettier": "@jamescoyle/prettier-config",
+	"dependencies": {
+		"@mdi/js": "^6.5.95"
+	}
 }

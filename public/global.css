@@ -53,6 +53,10 @@ body {
 	height: 528px;
 }
 
+svg {
+	fill: currentColor;
+}
+
 main {
 	color: var(--text-color);
 	background-color: var(--background-color);
@@ -67,7 +71,9 @@ button {
 }
 
 button:hover,
-button:focus {
+button:focus,
+.link-row:hover,
+.link-row:focus {
 	box-shadow: inset 0 0 100rem var(--hover-color);
 }
 
@@ -77,4 +83,34 @@ p {
 
 a {
 	text-decoration: none;
+}
+
+.scrollable {
+	position: relative;
+	flex: 1 1 auto;
+	overflow-x: hidden;
+	overflow-y: scroll;
+}
+
+.link-row,
+.bottom-button {
+	display: flex;
+	flex-flow: row nowrap;
+	align-items: center;
+	flex: 0 0 40px;
+	padding: 1rem;
+	color: inherit;
+}
+
+.link-row svg,
+.bottom-button svg {
+	margin-right: 1rem;
+}
+
+.bottom-button {
+	text-align: left;
+	background-color: transparent;
+	border: none;
+	border-top: 1px solid var(--hover-color);
+	outline: none;
 }
