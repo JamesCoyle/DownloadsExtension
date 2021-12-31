@@ -2,7 +2,7 @@
 	"manifest_version": 2,
 	"name": "Download Manager",
 	"short_name": "Downloads",
-	"version": "2.2",
+	"version": "2.3.0",
 	"author": "James Coyle",
 	"description": "A less intrusive way to access your recent downloads",
 	"icons": {
