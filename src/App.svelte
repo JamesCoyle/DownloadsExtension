@@ -1,6 +1,6 @@
 <script>
 	import { theme } from './stores/settings'
-	import currentView from './stores/current-view'
+	import { currentView } from './stores/current-view'
 
 	import MainView from './views/main.svelte'
 	import InfoView from './views/info.svelte'

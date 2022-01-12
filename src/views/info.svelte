@@ -1,5 +1,5 @@
 <script>
-	import currentView from './../stores/current-view'
+	import { currentView } from './../stores/current-view'
 
 	import Header from './../components/header.svelte'
 

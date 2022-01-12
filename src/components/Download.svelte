@@ -1,5 +1,5 @@
 <script>
-	import modifierKeys from './../stores/modifier-keys'
+	import { modifierKeys } from './../stores/modifier-keys'
 
 	import { mdiPlay, mdiPause, mdiClose, mdiFolder, mdiDelete, mdiOpenInNew } from '@mdi/js'
 
