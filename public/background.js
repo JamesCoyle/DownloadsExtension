@@ -5,7 +5,7 @@ importScripts('downloads.js')
 const downloads = new Downloads()
 
 const settings = {
-	theme: null,
+	theme: 'auto',
 	preferedTheme: 'default',
 	icon: 'auto',
 }
@@ -60,7 +60,7 @@ function updateStoredValues({ notifyOnComplete, notifyOnError, theme, preferedTh
  * @param {boolean} dark Dark mode prefered
  */
 function updateIcon() {
-	const folder = settings.icon !== 'auto' ? settings.icon : settings.theme !== 'auto' ? settings.theme : settings.preferedTheme
+	const folder = settings.icon && settings.icon !== 'auto' ? settings.icon : settings.theme && settings.theme !== 'auto' ? settings.theme : settings.preferedTheme || 'default'
 
 	chrome.action.setIcon({
 		path: {
