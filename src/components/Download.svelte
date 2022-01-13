@@ -96,6 +96,22 @@
 		// todo : handle click on file which is errored/incomplete
 		chrome.downloads.open(download.id)
 	}
+
+	function getByteProgress() {
+		const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB']
+		const k = 1024
+		let i = 0
+		let received = 0
+		let total = 0
+
+		if (download.totalBytes !== 0) {
+			i = Math.floor(Math.log(download.totalBytes) / Math.log(k))
+			received = (download.bytesReceived / Math.pow(k, i)).toFixed(1)
+			total = (download.totalBytes / Math.pow(k, i)).toFixed(1)
+		}
+
+		return received + '/' + total + ' ' + sizes[i]
+	}
 </script>
 
 <style>
@@ -184,6 +200,7 @@
 
 	.state {
 		opacity: 0.6;
+		font-size: 0.8em;
 		text-transform: capitalize;
 	}
 
@@ -202,9 +219,13 @@
 		<img class="icon" src={icon} alt="" />
 		<div class="file-info">
 			<div class="filename">{filename}</div>
-			{#if state !== 'complete' || deleted}
-				<div class="state">{state || 'Deleted'}</div>
-			{/if}
+			<div class="state">
+				{#if state === 'downloading'}
+					{getByteProgress()}
+				{:else if state !== 'complete' || deleted}
+					{state || 'Deleted'}
+				{/if}
+			</div>
 		</div>
 	</button>
 
