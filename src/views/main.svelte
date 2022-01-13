@@ -1,5 +1,6 @@
 <script>
 	import { currentView } from './../stores/current-view'
+	import { downloads } from './../stores/downloads'
 
 	import Header from './../components/header.svelte'
 	import Download from './../components/download.svelte'
@@ -11,8 +12,6 @@
 	function openDownloadsTab() {
 		chrome.tabs.create({ url: 'chrome://downloads' })
 	}
-
-	export let downloads = []
 </script>
 
 <style>
@@ -65,7 +64,7 @@
 />
 
 <div class="scrollable">
-	{#each downloads as download (download.id)}
+	{#each $downloads as download (download.id)}
 		<Download {download} />
 	{:else}
 		<div class="center">

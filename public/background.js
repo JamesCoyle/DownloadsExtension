@@ -52,7 +52,11 @@ function setShelf() {
 			showShelf: true,
 		})
 		.then(({ showShelf }) => {
-			chrome.downloads.setShelfEnabled(showShelf)
+			try {
+				chrome.downloads.setShelfEnabled(showShelf)
+			} catch (e) {
+				console.warn(e)
+			}
 			console.log('Shelf set', { showShelf })
 		})
 }
