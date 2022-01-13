@@ -2,7 +2,7 @@
 	import { theme, icon, showShelf, notifyOnComplete, notifyOnError, notifyOnStart } from './../stores/settings'
 	import { currentView } from './../stores/current-view'
 
-	import Header from './../components/header.svelte'
+	import Header from '../components/header.svelte'
 
 	import { icoKofi } from './../custom-icons'
 

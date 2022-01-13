@@ -2,12 +2,14 @@
 	import { currentView } from './../stores/current-view'
 	import { downloads } from './../stores/downloads'
 
-	import Header from './../components/header.svelte'
-	import Download from './../components/download.svelte'
+	import Header from '../components/header.svelte'
+	import Download from '../components/download.svelte'
 
 	import { mdiInformationOutline, mdiCog } from '@mdi/js'
 
 	const hints = ['Notifications can be enabled or disabled via the settings menu', 'Change the look and feel using the theme and icon switcher in the settings menu', 'Hold Ctrl to change the secondary actions for each download', 'Support development by <a href="https://ko-fi.com/jamescoyle" target="_blank">donating</a>']
+
+	$: console.log($downloads)
 
 	function openDownloadsTab() {
 		chrome.tabs.create({ url: 'chrome://downloads' })
