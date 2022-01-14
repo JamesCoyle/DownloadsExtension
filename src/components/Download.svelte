@@ -1,8 +1,13 @@
 <script>
 	import { modifierKeys } from './../stores/modifier-keys'
 	import { mdiPlay, mdiPause, mdiClose, mdiFolder, mdiDelete, mdiOpenInNew } from '@mdi/js'
+
+	import Download from '../classes/download'
+
 	export let download
+
 	let icon
+
 	$: buttons = [
 		{
 			description: 'Resume download',
@@ -11,7 +16,7 @@
 				chrome.downloads.resume(download.id)
 			},
 			condition() {
-				return ['error', 'paused'].includes(state)
+				return download.matchesStates(Download.state.error, Download.state.paused)
 			},
 		},
 		{
@@ -21,7 +26,7 @@
 				chrome.downloads.pause(download.id)
 			},
 			condition() {
-				return state === 'downloading'
+				return download.matchesStates(Download.state.downloading)
 			},
 		},
 		{
@@ -31,7 +36,7 @@
 				chrome.downloads.show(download.id)
 			},
 			condition() {
-				return state === 'complete' && $modifierKeys.ctrl === false
+				return download.matchesStates(Download.state.complete) && $modifierKeys.ctrl === false
 			},
 		},
 		{
@@ -43,7 +48,7 @@
 				})
 			},
 			condition() {
-				return state === 'complete' && $modifierKeys.ctrl === true
+				return download.matchesStates(Download.state.complete) && $modifierKeys.ctrl === true
 			},
 		},
 		{
@@ -53,7 +58,7 @@
 				chrome.downloads.cancel(download.id)
 			},
 			condition() {
-				return ['downloading', 'error', 'paused'].includes(state)
+				return download.matchesStates(Download.state.downloading, Download.state.error, Download.state.paused)
 			},
 		},
 		{
@@ -63,7 +68,7 @@
 				chrome.downloads.erase({ id: download.id })
 			},
 			condition() {
-				return state === 'complete' && $modifierKeys.ctrl === false
+				return download.matchesStates(Download.state.complete) && $modifierKeys.ctrl === false
 			},
 		},
 		{
@@ -76,41 +81,17 @@
 				})
 			},
 			condition() {
-				return state === 'complete' && $modifierKeys.ctrl === true
+				return download.matchesStates(Download.state.complete) && $modifierKeys.ctrl === true
 			},
 		},
 	]
 
-	$: filename = download.filename.split(/[\/\\]/).pop()
-	$: progress = (download.bytesReceived / download.totalBytes) * 100
-	$: deleted = !download.exists
-
 	// get icon
 	chrome.downloads.getFileIcon(download.id, (i) => (icon = i))
-
-	// set state classes
-	// todo : pull data from download
-	$: state = download.error ? 'error' : download.endTime ? 'complete' : download.paused ? 'paused' : 'downloading'
 
 	function handleFileClick(e) {
 		// todo : handle click on file which is errored/incomplete
 		chrome.downloads.open(download.id)
-	}
-
-	function getByteProgress() {
-		const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB']
-		const k = 1024
-		let i = 0
-		let received = 0
-		let total = 0
-
-		if (download.totalBytes !== 0) {
-			i = Math.floor(Math.log(download.totalBytes) / Math.log(k))
-			received = (download.bytesReceived / Math.pow(k, i)).toFixed(1)
-			total = (download.totalBytes / Math.pow(k, i)).toFixed(1)
-		}
-
-		return received + '/' + total + ' ' + sizes[i]
 	}
 </script>
 
@@ -214,16 +195,16 @@
 	}
 </style>
 
-<div class="download {state}" style="--progress: {progress}%">
-	<button class="file" title={filename} data-state={state} on:click={handleFileClick}>
+<div class="download {download.state}" style="--progress: {download.progress}%">
+	<button class="file" title={download.name} data-state={download.state} on:click={handleFileClick}>
 		<img class="icon" src={icon} alt="" />
 		<div class="file-info">
-			<div class="filename">{filename}</div>
+			<div class="filename">{download.name}</div>
 			<div class="state">
-				{#if state === 'downloading'}
-					{getByteProgress()}
-				{:else if state !== 'complete' || deleted}
-					{state || 'Deleted'}
+				{#if download.matchesStates(Download.state.downloading)}
+					{download.progressStr}
+				{:else if !download.matchesStates(Download.state.complete)}
+					{download.state}
 				{/if}
 			</div>
 		</div>
