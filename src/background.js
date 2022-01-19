@@ -1,5 +1,8 @@
+import { getDownloads } from './classes/download'
+
 setIcon()
 setShelf()
+getDownloads()
 
 // Perform updates on settings changes.
 chrome.storage.sync.onChanged.addListener((changes) => {
@@ -20,6 +23,12 @@ chrome.storage.sync.onChanged.addListener((changes) => {
 	})
 })
 
+// Get downloads on change.
+chrome.downloads.onChanged.addListener(() => {
+	// todo : do something with downloads now you have them...
+	getDownloads()
+})
+
 // Updates the action icon to match current theme/icon settings.
 function setIcon() {
 	chrome.storage.sync
@@ -29,16 +38,15 @@ function setIcon() {
 			detectedTheme: 'default',
 		})
 		.then(({ icon, theme, detectedTheme }) => {
-			console.log(icon, theme, detectedTheme)
 			const folder = icon !== 'auto' ? icon : theme !== 'auto' ? theme : detectedTheme || 'default'
 
 			chrome.action
 				.setIcon({
 					path: {
-						16: `icons/${folder}/icon-16.png`,
-						24: `icons/${folder}/icon-24.png`,
-						32: `icons/${folder}/icon-32.png`,
-						48: `icons/${folder}/icon-48.png`,
+						16: `/icons/${folder}/icon-16.png`,
+						24: `/icons/${folder}/icon-24.png`,
+						32: `/icons/${folder}/icon-32.png`,
+						48: `/icons/${folder}/icon-48.png`,
 					},
 				})
 				.then(() => console.log('Icon set', { folder }))
