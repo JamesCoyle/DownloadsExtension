@@ -16,7 +16,7 @@
 				chrome.downloads.resume(download.id)
 			},
 			condition() {
-				return download.matchesStates(Download.state.error, Download.state.paused)
+				return download.resumable
 			},
 		},
 		{
@@ -29,6 +29,7 @@
 				return download.matchesStates(Download.state.downloading)
 			},
 		},
+
 		{
 			description: 'Open in folder',
 			icon: mdiFolder,
@@ -51,6 +52,7 @@
 				return download.matchesStates(Download.state.complete) && $modifierKeys.ctrl === true
 			},
 		},
+
 		{
 			description: 'Cancel download',
 			icon: mdiClose,
@@ -68,17 +70,14 @@
 				chrome.downloads.erase({ id: download.id })
 			},
 			condition() {
-				return download.matchesStates(Download.state.complete) && $modifierKeys.ctrl === false
+				return download.matchesStates(Download.state.complete, Download.state.canceled) && $modifierKeys.ctrl === false
 			},
 		},
 		{
 			description: 'Delete download',
 			icon: mdiDelete,
 			action() {
-				chrome.downloads.removeFile(download.id, () => {
-					// todo : check for error before erasing
-					chrome.downloads.erase({ id: download.id })
-				})
+				chrome.downloads.removeFile(download.id).then(() => chrome.downloads.erase({ id: download.id }))
 			},
 			condition() {
 				return download.matchesStates(Download.state.complete) && $modifierKeys.ctrl === true
@@ -87,7 +86,9 @@
 	]
 
 	// get icon
-	chrome.downloads.getFileIcon(download.id, (i) => (icon = i))
+	chrome.downloads.getFileIcon(download.id, (i) => {
+		icon = i
+	})
 
 	function handleFileClick(e) {
 		// todo : handle click on file which is errored/incomplete

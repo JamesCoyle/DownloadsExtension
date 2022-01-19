@@ -3,6 +3,7 @@ export default class Download {
 		complete: 'complete',
 		downloading: 'downloading',
 		paused: 'paused',
+		canceled: 'canceled',
 		error: 'error',
 		deleted: 'deleted',
 	}
@@ -12,6 +13,7 @@ export default class Download {
 		this.name = dl.filename.split(/[\/\\]/).pop()
 		this.progress = (dl.bytesReceived / dl.totalBytes) * 100
 		this.progressStr = getByteProgress(dl.bytesReceived, dl.totalBytes)
+		this.resumable = dl.canResume
 		this.state = getState(dl)
 	}
 
@@ -20,9 +22,16 @@ export default class Download {
 	}
 }
 
+export function getDownloads() {
+	return chrome.downloads.search({ orderBy: ['-startTime'] }).then((dls) => dls.filter((d) => d.filename && d.incognito == false).map((dl) => new Download(dl)))
+}
+
 function getState(dl) {
 	if (!dl.exists) return Download.state.deleted
-	if (dl.error) return Download.state.error
+	if (dl.error) {
+		if (dl.error === 'USER_CANCELED') return Download.state.canceled
+		return Download.state.error
+	}
 	if (dl.endTime) return Download.state.complete
 	if (dl.paused) return Download.state.paused
 	return Download.state.downloading
