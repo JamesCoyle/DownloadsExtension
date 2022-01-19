@@ -3,7 +3,6 @@ import { writable } from 'svelte/store'
 function createStore(key, initial) {
 	const store = writable(initial)
 	store.subscribe((val) => {
-		console.log('Updated', key, val)
 		chrome.storage.sync.set({ [key]: val })
 	})
 	return store

@@ -18,8 +18,6 @@ class Downloads {
 		chrome.downloads.onChanged.addListener((delta) => {
 			const { id, error, filename: downloading, paused, endTime: complete } = delta
 
-			console.log('UPDATE', delta)
-
 			if (complete) this.updateDownload(id, 'complete')
 			else if (downloading) this.updateDownload(id, 'downloading')
 			else if (paused) this.updateDownload(id, 'paused')
