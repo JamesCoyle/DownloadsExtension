@@ -1,6 +1,6 @@
 <script>
 	import { modifierKeys } from './../stores/modifier-keys'
-	import { mdiPlay, mdiPause, mdiClose, mdiFolder, mdiDelete, mdiOpenInNew } from '@mdi/js'
+	import { mdiDownload, mdiPause, mdiClose, mdiFolder, mdiDelete, mdiOpenInNew } from '@mdi/js'
 
 	import Download from '../classes/download'
 
@@ -11,7 +11,7 @@
 	$: buttons = [
 		{
 			description: 'Resume download',
-			icon: mdiPlay,
+			icon: mdiDownload,
 			action() {
 				chrome.downloads.resume(download.id)
 			},
