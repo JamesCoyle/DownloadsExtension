@@ -48,7 +48,7 @@ function updateDownloads() {
 	getDownloads().then(async (downloads) => {
 		const unseenDownloads = await getUnseenDownloads(downloads)
 
-		const dominantState = getDominantState(stateArr)
+		const dominantState = getDominantState(unseenDownloads)
 		const completedDownloadsTotal = unseenDownloads.filter((dl) => dl.matchesStates(Download.state.complete)).length
 		const activeDownloadsTotal = unseenDownloads.filter((dl) => dl.matchesStates(Download.state.downloading, Download.state.paused, Download.state.error, Download.state.complete)).length
 
@@ -137,8 +137,9 @@ function getStates(downloads) {
 }
 
 // Returns the most important download state from an array of download states.
-function getDominantState(states) {
+function getDominantState(downloads) {
 	const priorities = [Download.state.downloading, Download.state.error, Download.state.paused]
+	const states = downloads.map((dl) => dl.state)
 
 	for (const state of priorities) {
 		if (states.includes(state)) return state
