@@ -4,11 +4,14 @@ setIcon()
 setShelf()
 updateDownloads()
 
+// Clean local storage on install.
+chrome.runtime.onInstalled.addListener((details) => {
+	chrome.storage.local.clear()
+})
+
 // Perform updates on settings changes.
 chrome.storage.sync.onChanged.addListener((changes) => {
-	const changedKeys = Object.keys(changes)
-
-	changedKeys.forEach((key) => {
+	for (const key of Object.keys(changes)) {
 		switch (key) {
 			case 'showShelf':
 				setShelf()
@@ -20,7 +23,19 @@ chrome.storage.sync.onChanged.addListener((changes) => {
 				setIcon()
 				break
 		}
-	})
+	}
+})
+
+// Perform updates on local data changes.
+chrome.storage.local.onChanged.addListener((changes) => {
+	for (const key of Object.keys(changes)) {
+		switch (key) {
+			// Update downloads list on viewed list change.
+			case 'seen':
+				updateDownloads()
+				break
+		}
+	}
 })
 
 // Get downloads on change.
@@ -30,14 +45,17 @@ chrome.downloads.onChanged.addListener(() => {
 
 // Retreives latest download information and handles badge updates and notifications.
 function updateDownloads() {
-	getDownloads().then((downloads) => {
-		const states = getStates(downloads)
-		const stateValues = Array.from(states.values())
-		const dominantState = getDominantState(stateValues)
-		const completedDownloads = stateValues.filter((state) => state === Download.state.complete).length
-		const activeDownloads = stateValues.filter((state) => [Download.state.downloading, Download.state.paused, Download.state.error, Download.state.complete].includes(state)).length
+	getDownloads().then(async (downloads) => {
+		const unseen = await getUnseen(downloads)
+		const states = getStates(unseen)
+		const stateArr = Array.from(states.values())
+		const dominantState = getDominantState(stateArr)
+		const completedDownloads = stateArr.filter((state) => state === Download.state.complete).length
+		const activeDownloads = stateArr.filter((state) => [Download.state.downloading, Download.state.paused, Download.state.error, Download.state.complete].includes(state)).length
 
 		setBadge(dominantState, completedDownloads, activeDownloads)
+
+		// todo : Clear viewed download localstorage if downloads no longer exist for those ids.
 
 		chrome.storage.local.get('states').then((oldStates) => {
 			// todo: Compare old states with new states and push out notifications.
@@ -68,7 +86,7 @@ function setIcon() {
 						48: `/icons/${folder}/icon-48.png`,
 					},
 				})
-				.then(() => console.log('Icon set', { folder }))
+				.then(() => console.info('Icon set', { folder }))
 		})
 }
 
@@ -84,24 +102,28 @@ function setShelf() {
 			} catch (e) {
 				console.warn(e)
 			}
-			console.log('Shelf set', { showShelf })
+			console.info('Shelf set', { showShelf })
 		})
 }
 
 // Sets the badge on the popup icon.
 function setBadge(dominantState, completed, active) {
-	console.log({ dominantState, completed, active })
-
 	const colors = {
 		[Download.state.complete]: '#33993B',
 		[Download.state.downloading]: '#3369d7',
 		[Download.state.paused]: '#FFC247',
 		[Download.state.error]: '#FE4134',
 	}
-	const text = dominantState === Download.state.complete ? active.toString() : completed + '/' + active
+	const text = active <= 0 ? '' : dominantState === Download.state.complete ? active.toString() : completed + '/' + active
 
 	chrome.action.setBadgeBackgroundColor({ color: colors[dominantState] })
 	chrome.action.setBadgeText({ text })
+}
+
+// Returns a promise resolving to all downloads with any viewed completed downloads removed.
+async function getUnseen(downloads) {
+	const seen = Symbol()
+	return (await Promise.all(downloads.map(async (dl) => ((await dl.isSeen()) ? seen : dl)))).filter((item) => item !== seen)
 }
 
 // Creates a Map containing download ids and their corrosponding download states.
@@ -117,7 +139,7 @@ function getStates(downloads) {
 
 // Returns the most important download state from an array of download states.
 function getDominantState(states) {
-	const priorities = [Download.state.error, Download.state.downloading, Download.state.paused]
+	const priorities = [Download.state.downloading, Download.state.error, Download.state.paused]
 
 	for (const state of priorities) {
 		if (states.includes(state)) return state

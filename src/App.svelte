@@ -1,6 +1,9 @@
 <script>
 	import { theme } from './stores/settings'
 	import { currentView } from './stores/current-view'
+	import { downloads } from './stores/downloads'
+
+	import Download from './classes/download'
 
 	import MainView from './views/main.svelte'
 	import InfoView from './views/info.svelte'
@@ -10,18 +13,6 @@
 	chrome.storage.sync.set({
 		detectedTheme: window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'default',
 	})
-
-	// function requestNotificationPermission(success, rejected) {
-	// chrome.permissions.request(
-	// {
-	// permissions: ['notifications'],
-	// },
-	// (granted) => {
-	// if (granted) success()
-	// else rejected()
-	// }
-	// )
-	// }
 </script>
 
 <style>

@@ -20,6 +20,10 @@ export default class Download {
 	matchesStates(...states) {
 		return states.includes(this.state)
 	}
+
+	isSeen() {
+		return chrome.storage.local.get('seen').then(({ seen }) => seen?.includes(this.id))
+	}
 }
 
 export function getDownloads() {
@@ -28,12 +32,16 @@ export function getDownloads() {
 
 function getState(dl) {
 	if (!dl.exists) return Download.state.deleted
+
 	if (dl.error) {
 		if (dl.error === 'USER_CANCELED') return Download.state.canceled
 		return Download.state.error
 	}
+
 	if (dl.endTime) return Download.state.complete
+
 	if (dl.paused) return Download.state.paused
+
 	return Download.state.downloading
 }
 

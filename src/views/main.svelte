@@ -3,7 +3,7 @@
 	import { downloads } from './../stores/downloads'
 
 	import Header from '../components/header.svelte'
-	import Download from '../components/download.svelte'
+	import DownloadItem from '../components/download-item.svelte'
 
 	import { mdiInformationOutline, mdiCog } from '@mdi/js'
 
@@ -65,7 +65,7 @@
 
 <div class="scrollable">
 	{#each $downloads as download (download.id)}
-		<Download {download} />
+		<DownloadItem {download} />
 	{:else}
 		<div class="center">
 			<img width="160" height="160" src="images/no-downloads.svg" alt="" />

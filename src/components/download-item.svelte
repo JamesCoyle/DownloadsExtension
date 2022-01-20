@@ -1,5 +1,5 @@
 <script>
-	import { modifierKeys } from './../stores/modifier-keys'
+	import { modifierKeys } from '../stores/modifier-keys'
 	import { mdiDownload, mdiPause, mdiClose, mdiFolder, mdiDelete, mdiOpenInNew } from '@mdi/js'
 
 	import Download from '../classes/download'
@@ -100,7 +100,7 @@
 	@keyframes complete {
 		0%,
 		50% {
-			background-color: #33993B;
+			background-color: #33993b;
 		}
 		25%,
 		75% {
