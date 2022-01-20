@@ -30,6 +30,7 @@ export function getDownloads() {
 	return chrome.downloads.search({ orderBy: ['-startTime'] }).then((dls) => dls.filter((d) => d.filename && d.incognito == false).map((dl) => new Download(dl)))
 }
 
+// Determines the current state of the given download.
 function getState(dl) {
 	if (!dl.exists) return Download.state.deleted
 
@@ -45,6 +46,7 @@ function getState(dl) {
 	return Download.state.downloading
 }
 
+// Returns the byte progress of the download as a scaled string value.
 function getByteProgress(received, total) {
 	const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB']
 	const k = 1024
