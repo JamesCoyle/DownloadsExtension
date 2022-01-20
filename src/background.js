@@ -1,8 +1,8 @@
-import { getDownloads } from './classes/download'
+import Download, { getDownloads } from './classes/download'
 
 setIcon()
 setShelf()
-getDownloads()
+updateDownloads()
 
 // Perform updates on settings changes.
 chrome.storage.sync.onChanged.addListener((changes) => {
@@ -25,9 +25,28 @@ chrome.storage.sync.onChanged.addListener((changes) => {
 
 // Get downloads on change.
 chrome.downloads.onChanged.addListener(() => {
-	// todo : do something with downloads now you have them...
-	getDownloads()
+	updateDownloads()
 })
+
+// Retreives latest download information and handles badge updates and notifications.
+function updateDownloads() {
+	getDownloads().then((downloads) => {
+		const states = getStates(downloads)
+		const stateValues = Array.from(states.values())
+		const dominantState = getDominantState(stateValues)
+		const completedDownloads = stateValues.filter((state) => state === Download.state.complete).length
+		const activeDownloads = stateValues.filter((state) => [Download.state.downloading, Download.state.paused, Download.state.error, Download.state.complete].includes(state)).length
+
+		setBadge(dominantState, completedDownloads, activeDownloads)
+
+		chrome.storage.local.get('states').then((oldStates) => {
+			// todo: Compare old states with new states and push out notifications.
+
+			// Update stored states.
+			chrome.storage.local.set({ states: Object.fromEntries(states) })
+		})
+	})
+}
 
 // Updates the action icon to match current theme/icon settings.
 function setIcon() {
@@ -69,11 +88,45 @@ function setShelf() {
 		})
 }
 
+// Sets the badge on the popup icon.
+function setBadge(dominantState, completed, active) {
+	console.log({ dominantState, completed, active })
+
+	const colors = {
+		[Download.state.complete]: '#33993B',
+		[Download.state.downloading]: '#3369d7',
+		[Download.state.paused]: '#FFC247',
+		[Download.state.error]: '#FE4134',
+	}
+	const text = dominantState === Download.state.complete ? active.toString() : completed + '/' + active
+
+	chrome.action.setBadgeBackgroundColor({ color: colors[dominantState] })
+	chrome.action.setBadgeText({ text })
+}
+
+// Creates a Map containing download ids and their corrosponding download states.
+function getStates(downloads) {
+	const states = new Map()
+
+	for (const dl of downloads) {
+		states.set(dl.id, dl.state)
+	}
+
+	return states
+}
+
+// Returns the most important download state from an array of download states.
+function getDominantState(states) {
+	const priorities = [Download.state.error, Download.state.downloading, Download.state.paused]
+
+	for (const state of priorities) {
+		if (states.includes(state)) return state
+	}
+
+	return Download.state.complete
+}
+
 /// ======== OLD =========
-
-// importScripts('downloads.js')
-
-// const downloads = new Downloads()
 
 // // clear completed downloads when popup open
 // chrome.runtime.onMessage.addListener(() => {
@@ -88,25 +141,3 @@ function setShelf() {
 // chrome.permissions.onAdded.addListener(({ permissions }) => {
 // 	if (permissions.includes('notifications')) setNotificationEventHandlers()
 // })
-
-// /**
-//  * Set the listeners to handle notification click events
-//  */
-// function setNotificationEventHandlers() {
-// 	console.log('notification handlers set')
-
-// 	// open file on notification click
-// 	chrome.notifications.onClicked.addListener((notificationId) => {
-// 		const downloadId = parseInt(notificationId)
-// 		chrome.downloads.open(downloadId)
-// 		downloads.clear(parseInt(downloadId))
-// 	})
-
-// 	// open file or folder when notification buttons clicked
-// 	chrome.notifications.onButtonClicked.addListener((notificationId, showInFolder) => {
-// 		const downloadId = parseInt(notificationId)
-// 		if (showInFolder) chrome.downloads.show(downloadId)
-// 		else chrome.downloads.open(downloadId)
-// 		downloads.clear(parseInt(downloadId))
-// 	})
-// }

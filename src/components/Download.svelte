@@ -100,7 +100,7 @@
 	@keyframes complete {
 		0%,
 		50% {
-			background-color: #33991e;
+			background-color: #33993B;
 		}
 		25%,
 		75% {
@@ -138,11 +138,11 @@
 	}
 
 	.download.paused::before {
-		background-color: #99951e;
+		background-color: #ffc247;
 	}
 
 	.download.error::before {
-		background-color: #d73333;
+		background-color: #fe4134;
 	}
 
 	.download.complete::before {
