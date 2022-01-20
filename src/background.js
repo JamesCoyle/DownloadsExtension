@@ -46,18 +46,17 @@ chrome.downloads.onChanged.addListener(() => {
 // Retreives latest download information and handles badge updates and notifications.
 function updateDownloads() {
 	getDownloads().then(async (downloads) => {
-		const unseen = await getUnseen(downloads)
-		const states = getStates(unseen)
-		const stateArr = Array.from(states.values())
+		const unseenDownloads = await getUnseenDownloads(downloads)
+
 		const dominantState = getDominantState(stateArr)
-		const completedDownloads = stateArr.filter((state) => state === Download.state.complete).length
-		const activeDownloads = stateArr.filter((state) => [Download.state.downloading, Download.state.paused, Download.state.error, Download.state.complete].includes(state)).length
+		const completedDownloadsTotal = unseenDownloads.filter((dl) => dl.matchesStates(Download.state.complete)).length
+		const activeDownloadsTotal = unseenDownloads.filter((dl) => dl.matchesStates(Download.state.downloading, Download.state.paused, Download.state.error, Download.state.complete)).length
 
-		setBadge(dominantState, completedDownloads, activeDownloads)
-
-		// todo : Clear viewed download localstorage if downloads no longer exist for those ids.
+		setBadge(dominantState, completedDownloadsTotal, activeDownloadsTotal)
 
 		chrome.storage.local.get('states').then((oldStates) => {
+			const states = getStates(unseenDownloads)
+
 			// todo: Compare old states with new states and push out notifications.
 
 			// Update stored states.
@@ -121,7 +120,7 @@ function setBadge(dominantState, completed, active) {
 }
 
 // Returns a promise resolving to all downloads with any viewed completed downloads removed.
-async function getUnseen(downloads) {
+async function getUnseenDownloads(downloads) {
 	const seen = Symbol()
 	return (await Promise.all(downloads.map(async (dl) => ((await dl.isSeen()) ? seen : dl)))).filter((item) => item !== seen)
 }
