@@ -17,15 +17,18 @@ export default class Download {
 		this.state = getState(dl)
 	}
 
+	// Returns true if the current download state matches any of the given states.
 	matchesStates(...states) {
 		return states.includes(this.state)
 	}
 
+	// Returns a promise which resolves to true if the user has seen the completed download in the popup.
 	isSeen() {
 		return chrome.storage.local.get('seen').then(({ seen }) => seen?.includes(this.id))
 	}
 }
 
+// Returns a promise which resolves with all current active downloads ordered by their start time.
 export function getDownloads() {
 	return chrome.downloads.search({ orderBy: ['-startTime'] }).then((dls) => dls.filter((d) => d.filename && d.incognito == false).map((dl) => new Download(dl)))
 }
