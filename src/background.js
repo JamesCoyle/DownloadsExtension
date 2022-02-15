@@ -1,4 +1,5 @@
 import Download, { getDownloads } from './classes/download'
+import Notify from './classes/notify'
 
 setIcon()
 setShelf()
@@ -48,16 +49,37 @@ function updateDownloads() {
 	getDownloads().then(async (downloads) => {
 		const unseenDownloads = await getUnseenDownloads(downloads)
 
-		const dominantState = getDominantState(unseenDownloads)
-		const completedDownloadsTotal = unseenDownloads.filter((dl) => dl.matchesStates(Download.state.complete)).length
-		const activeDownloadsTotal = unseenDownloads.filter((dl) => dl.matchesStates(Download.state.downloading, Download.state.paused, Download.state.error, Download.state.complete)).length
+		// Update badge.
+		setBadge(unseenDownloads)
 
-		setBadge(dominantState, completedDownloadsTotal, activeDownloadsTotal)
-
-		chrome.storage.local.get('states').then((oldStates) => {
+		// Detect state changes.
+		chrome.storage.local.get('states').then(({ states: oldStates = [] }) => {
 			const states = getStates(unseenDownloads)
 
-			// todo: Compare old states with new states and push out notifications.
+			// Handle specific state changes.
+			for (const [id, state] of states.entries()) {
+				if (state === oldStates[id]) continue // Continue if state not changed.
+
+				const currentDownload = unseenDownloads.find((dl) => dl.id === id)
+
+				switch (state) {
+					case Download.state.downloading:
+						Notify.started(currentDownload)
+						break
+
+					case Download.state.paused:
+						Notify.paused(currentDownload)
+						break
+
+					case Download.state.error:
+						Notify.error(currentDownload)
+						break
+
+					case Download.state.complete:
+						Notify.complete(currentDownload)
+						break
+				}
+			}
 
 			// Update stored states.
 			chrome.storage.local.set({ states: Object.fromEntries(states) })
@@ -106,14 +128,19 @@ function setShelf() {
 }
 
 // Sets the badge on the popup icon.
-function setBadge(dominantState, completed, active) {
+function setBadge(downloads) {
 	const colors = {
 		[Download.state.complete]: '#33993B',
 		[Download.state.downloading]: '#3369d7',
 		[Download.state.paused]: '#FFC247',
 		[Download.state.error]: '#FE4134',
 	}
-	const text = active <= 0 ? '' : dominantState === Download.state.complete ? active.toString() : completed + '/' + active
+
+	const dominantState = getDominantState(downloads)
+	const completedDownloadsTotal = downloads.filter((dl) => dl.matchesStates(Download.state.complete)).length
+	const activeDownloadsTotal = downloads.filter((dl) => dl.matchesStates(Download.state.downloading, Download.state.paused, Download.state.error, Download.state.complete)).length
+
+	const text = activeDownloadsTotal <= 0 ? '' : dominantState === Download.state.complete ? activeDownloadsTotal.toString() : completedDownloadsTotal + '/' + activeDownloadsTotal
 
 	chrome.action.setBadgeBackgroundColor({ color: colors[dominantState] })
 	chrome.action.setBadgeText({ text })
@@ -147,19 +174,3 @@ function getDominantState(downloads) {
 
 	return Download.state.complete
 }
-
-/// ======== OLD =========
-
-// // clear completed downloads when popup open
-// chrome.runtime.onMessage.addListener(() => {
-// 	downloads.clearAll()
-// })
-
-// // set notification handlers when allowed
-// chrome.permissions.contains({ permissions: ['notifications'] }, (allowed) => {
-// 	if (!allowed) return
-// 	setNotificationEventHandlers()
-// })
-// chrome.permissions.onAdded.addListener(({ permissions }) => {
-// 	if (permissions.includes('notifications')) setNotificationEventHandlers()
-// })

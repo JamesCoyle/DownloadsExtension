@@ -8,15 +8,14 @@ function createStore(key, initial) {
 	return store
 }
 
-chrome.storage.sync.get(['theme', 'icon', 'showShelf']).then((items) => {
+chrome.storage.sync.get(['theme', 'icon', 'showShelf', 'notify']).then((items) => {
+	showShelf.set(items.showShelf)
 	theme.set(items.theme)
 	icon.set(items.icon)
-	showShelf.set(items.showShelf)
+	notify.set(items.notify)
 })
 
+export const showShelf = createStore('showShelf', false)
 export const theme = createStore('theme', 'auto')
 export const icon = createStore('icon', 'auto')
-export const showShelf = createStore('showShelf', false)
-export const notifyOnStart = createStore('notifyOnStart', false)
-export const notifyOnComplete = createStore('notifyOnComplete', false)
-export const notifyOnError = createStore('notifyOnError', false)
+export const notify = createStore('notify', { onStart: false, onPause: false, onError: false, onComplete: false })

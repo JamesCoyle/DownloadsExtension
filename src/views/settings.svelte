@@ -1,28 +1,19 @@
 <script>
-	import { theme, icon, showShelf, notifyOnComplete, notifyOnError, notifyOnStart } from './../stores/settings'
+	import { theme, icon, showShelf, notify } from './../stores/settings'
 	import { currentView } from './../stores/current-view'
 
 	import Header from '../components/header.svelte'
 
 	import { icoKofi } from './../custom-icons'
 
-	// function updateNotifyPreference({ target: { checked: enable, name: type } }) {
-	// if (enable) {
-	// requestNotificationPermission(
-	// () => chrome.storage.sync.set({ [type]: true }),
-	// () => {
-	// alert('Notifications permission must be granted to enable notifications')
-	// event.target.checked = false
-	// }
-	// )
-	// } else {
-	// chrome.storage.sync.set({ [type]: false })
-	// }
-	// }
-	//
-	// function updateShelfPreference(event) {
-	// chrome.storage.sync.set({ showShelf: event.target.checked })
-	// }
+	function updatePermission() {
+		// Request permission if any notification active otherwise remove.
+		if (Object.values($notify).some((enabled) => enabled)) {
+			chrome.permissions.request({ permissions: ['notifications'] })
+		} else {
+			chrome.permissions.remove({ permissions: ['notifications'] })
+		}
+	}
 </script>
 
 <style>
@@ -106,15 +97,19 @@
 		<h2>Notifications</h2>
 		<div class="setting-item">
 			<label for="enable-start-notification">Download started</label>
-			<input id="enable-start-notification" type="checkbox" name="notifyOnError" bind:checked={$notifyOnStart} />
+			<input id="enable-start-notification" type="checkbox" on:change={updatePermission} bind:checked={$notify.onStart} />
+		</div>
+		<div class="setting-item">
+			<label for="enable-paused-notification">Download paused</label>
+			<input id="enable-paused-notification" type="checkbox" on:change={updatePermission} bind:checked={$notify.onPause} />
+		</div>
+		<div class="setting-item">
+			<label for="enable-error-notification">Download error</label>
+			<input id="enable-error-notification" type="checkbox" on:change={updatePermission} bind:checked={$notify.onError} />
 		</div>
 		<div class="setting-item">
 			<label for="enable-complete-notification">Download completed</label>
-			<input id="enable-complete-notification" type="checkbox" name="notifyOnComplete" bind:checked={$notifyOnComplete} />
-		</div>
-		<div class="setting-item">
-			<label for="enable-error-notification">Error downloading</label>
-			<input id="enable-error-notification" type="checkbox" name="notifyOnError" bind:checked={$notifyOnError} />
+			<input id="enable-complete-notification" type="checkbox" on:change={updatePermission} bind:checked={$notify.onComplete} />
 		</div>
 	</section>
 </div>
