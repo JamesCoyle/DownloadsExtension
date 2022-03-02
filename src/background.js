@@ -6,7 +6,7 @@ setShelf()
 updateDownloads()
 
 // Clean local storage on install.
-chrome.runtime.onInstalled.addListener((details) => {
+chrome.runtime.onInstalled.addListener(() => {
 	chrome.storage.local.clear()
 })
 
