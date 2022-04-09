@@ -2,28 +2,28 @@ import Download from './download'
 
 export default class Notify {
 	static started(download) {
-		chrome.storage.sync.get('notify').then(({ notify: { onStart: allowed } }) => {
+		chrome.storage.sync.get('notify').then(({ notify: { onStart: allowed = false } }) => {
 			if (!allowed) return
 			showNotification(download, 'Download started')
 		})
 	}
 
 	static paused(download) {
-		chrome.storage.sync.get('notify').then(({ notify: { onPause: allowed } }) => {
+		chrome.storage.sync.get('notify').then(({ notify: { onPause: allowed = false } }) => {
 			if (!allowed) return
 			showNotification(download, 'Download paused')
 		})
 	}
 
 	static error(download) {
-		chrome.storage.sync.get('notify').then(({ notify: { onError: allowed } }) => {
+		chrome.storage.sync.get('notify').then(({ notify: { onError: allowed = false } }) => {
 			if (!allowed) return
 			showNotification(download, 'An error occured while downloading')
 		})
 	}
 
 	static complete(download) {
-		chrome.storage.sync.get('notify').then(({ notify: { onComplete: allowed } }) => {
+		chrome.storage.sync.get('notify').then(({ notify: { onComplete: allowed = false } }) => {
 			if (!allowed) return
 			showNotification(download, 'Download complete')
 		})
