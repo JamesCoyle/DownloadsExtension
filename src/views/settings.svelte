@@ -1,10 +1,16 @@
 <script>
-	import { theme, icon, showShelf, notify } from './../stores/settings'
+	import { theme, iconColor, defaultIconColor, showShelf, notify } from './../stores/settings'
 	import { currentView } from './../stores/current-view'
 
+	import IconButton from '../components/icon-button.svelte'
 	import Header from '../components/header.svelte'
 
+	import { mdiRestore } from '@mdi/js'
 	import { icoKofi } from './../custom-icons'
+
+	function updateIconColor(e) {
+		$iconColor = e.target.value
+	}
 
 	function updatePermission() {
 		// Request permission if any notification active otherwise remove.
@@ -35,6 +41,7 @@
 
 	input,
 	select {
+		min-height: 1.5rem;
 		margin: 0.25rem 0.5rem;
 		padding: 0.25rem 0.5rem;
 	}
@@ -42,6 +49,17 @@
 	input[type='checkbox'] {
 		width: 1rem;
 		height: 1rem;
+	}
+
+	input[type='color'] {
+		cursor: pointer;
+		width: 1.5rem;
+		height: 1.5rem;
+		padding: 0;
+	}
+
+	input[type='color']::-webkit-color-swatch-wrapper {
+		padding: 0;
 	}
 
 	.setting-item {
@@ -84,13 +102,9 @@
 			</select>
 		</div>
 		<div class="setting-item">
-			<label for="icon">Icon</label>
-			<select name="icon" id="icon" bind:value={$icon}>
-				<option value="auto">Match theme</option>
-				<option value="default">Blue</option>
-				<option value="light">Dark Gray</option>
-				<option value="dark">White</option>
-			</select>
+			<label for="icon">Icon color</label>
+			<IconButton description="Reset color to default" icon={mdiRestore} action={() => iconColor.set('auto')} />
+			<input type="color" name="icon-color" id="icon-color" value={$iconColor !== 'auto' ? $iconColor : $defaultIconColor} on:change={updateIconColor} />
 		</div>
 	</section>
 	<section>

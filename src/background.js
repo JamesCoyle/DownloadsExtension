@@ -18,9 +18,8 @@ chrome.storage.sync.onChanged.addListener((changes) => {
 				setShelf()
 				break
 
-			case 'icon':
-			case 'theme':
-			case 'detectedTheme':
+			case 'iconColor':
+			case 'defaultIconColor':
 				setIcon()
 				break
 		}
@@ -89,26 +88,16 @@ function updateDownloads() {
 
 // Updates the action icon to match current theme/icon settings.
 function setIcon() {
-	chrome.storage.sync
-		.get({
-			icon: 'auto',
-			theme: 'auto',
-			detectedTheme: 'default',
-		})
-		.then(({ icon, theme, detectedTheme }) => {
-			const folder = icon !== 'auto' ? icon : theme !== 'auto' ? theme : detectedTheme || 'default'
+	chrome.storage.sync.get(['iconColor', 'defaultIconColor']).then(({ iconColor, defaultIconColor }) => {
+		const path = new Path2D('M 2.5 15 H 13.5 V 13 H 2.5 M 13 6 H 10 V 1 H 6 V 6 H 3 L 8 11 Z')
+		const canvas = new OffscreenCanvas(16, 16)
+		const context = canvas.getContext('2d')
+		context.clearRect(0, 0, canvas.width, canvas.height)
+		context.fillStyle = iconColor === 'auto' ? defaultIconColor : iconColor
+		context.fill(path)
 
-			chrome.action
-				.setIcon({
-					path: {
-						16: `/icons/${folder}/icon-16.png`,
-						24: `/icons/${folder}/icon-24.png`,
-						32: `/icons/${folder}/icon-32.png`,
-						48: `/icons/${folder}/icon-48.png`,
-					},
-				})
-				.then(() => console.info('Icon set', { folder }))
-		})
+		chrome.action.setIcon({ imageData: context.getImageData(0, 0, 16, 16) })
+	})
 }
 
 // Sets the visibility of the default Chrome downloads shelf.

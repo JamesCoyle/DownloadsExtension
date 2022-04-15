@@ -2,7 +2,7 @@
 	"manifest_version": 3,
 	"name": "Download Manager",
 	"short_name": "Downloads",
-	"version": "3.0.0",
+	"version": "3.0.1",
 	"author": "James Coyle",
 	"description": "A less intrusive way to access your recent downloads",
 	"icons": {
@@ -25,10 +25,10 @@
 		"default_popup": "index.html",
 		"default_title": "Downloads",
 		"default_icon": {
-			"16": "icons/default/icon-16.png",
-			"24": "icons/default/icon-24.png",
-			"32": "icons/default/icon-32.png",
-			"48": "icons/default/icon-48.png"
+			"16": "icons/icon-16.png",
+			"24": "icons/icon-24.png",
+			"32": "icons/icon-32.png",
+			"48": "icons/icon-48.png"
 		}
 	},
 	"background": {

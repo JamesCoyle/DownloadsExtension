@@ -34,7 +34,7 @@
 		right: 0;
 		left: 0;
 		display: flex;
-		flex-flow: row nowrap;
+		flex-flow: row nowrap; 
 		align-items: center;
 		padding: 1rem;
 		flex: 0 0 3rem;

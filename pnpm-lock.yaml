@@ -5,6 +5,7 @@ specifiers:
   '@mdi/js': ^6.5.95
   '@rollup/plugin-commonjs': ^17.1.0
   '@rollup/plugin-node-resolve': ^11.2.1
+  debounce: ^1.2.1
   rollup: ^2.62.0
   rollup-plugin-css-only: ^3.1.0
   rollup-plugin-livereload: ^2.0.5
@@ -14,6 +15,7 @@ specifiers:
 
 dependencies:
   '@mdi/js': 6.5.95
+  debounce: 1.2.1
 
 devDependencies:
   '@jamescoyle/prettier-config': 1.1.0
@@ -218,6 +220,10 @@ packages:
   /concat-map/0.0.1:
     resolution: {integrity: sha1-2Klr13/Wjfd5OnMDajug1UBdR3s=}
     dev: true
+
+  /debounce/1.2.1:
+    resolution: {integrity: sha512-XRRe6Glud4rd/ZGQfiV1ruXSfbvfJedlV9Y6zOlP+2K04vBYiJEte6stfFkCP03aMnY5tsipamumUjL14fofug==}
+    dev: false
 
   /deepmerge/4.2.2:
     resolution: {integrity: sha512-FJ3UgI4gIl+PHZm53knsuSFpE+nESMr7M4v9QcgB7S63Kj/6WqMiFQJpBBYz1Pt+66bZpP3Q7Lye0Oo9MPKEdg==}
