@@ -1,13 +1,14 @@
 import Download, { getDownloads } from './classes/download'
 import Notify from './classes/notify'
 
-setIcon()
-setShelf()
-updateDownloads()
+chrome.runtime.onStartup.addListener(() => {
+	initialize()
+})
 
 // Clean local storage on install.
 chrome.runtime.onInstalled.addListener(() => {
 	chrome.storage.local.clear()
+	initialize()
 })
 
 // Perform updates on settings changes.
@@ -42,6 +43,12 @@ chrome.storage.local.onChanged.addListener((changes) => {
 chrome.downloads.onChanged.addListener(() => {
 	updateDownloads()
 })
+
+function initialize() {
+	setIcon()
+	setShelf()
+	updateDownloads()
+}
 
 // Retreives latest download information and handles badge updates and notifications.
 function updateDownloads() {
@@ -89,6 +96,7 @@ function updateDownloads() {
 // Updates the action icon to match current theme/icon settings.
 function setIcon() {
 	chrome.storage.sync.get(['iconColor', 'defaultIconColor']).then(({ iconColor, defaultIconColor }) => {
+		console.log('Icon color set', { iconColor, defaultIconColor })
 		const path = new Path2D('M 2.5 15 H 13.5 V 13 H 2.5 M 13 6 H 10 V 1 H 6 V 6 H 3 L 8 11 Z')
 		const canvas = new OffscreenCanvas(16, 16)
 		const context = canvas.getContext('2d')
@@ -109,10 +117,10 @@ function setShelf() {
 		.then(({ showShelf }) => {
 			try {
 				chrome.downloads.setShelfEnabled(showShelf)
+				console.info('Shelf set', { showShelf })
 			} catch (e) {
 				console.warn(e)
 			}
-			console.info('Shelf set', { showShelf })
 		})
 }
 
