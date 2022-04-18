@@ -1,6 +1,8 @@
 <script>
 	export let heading = ''
 	export let buttons = []
+
+	import IconButton from './icon-button.svelte'
 </script>
 
 <style>
@@ -21,26 +23,12 @@
 		margin: 0 1rem;
 		font: inherit;
 	}
-
-	button {
-		display: grid;
-		justify-content: center;
-		align-items: center;
-		width: 2rem;
-		height: 2rem;
-		margin: 0.5rem;
-		border-radius: 50%;
-	}
 </style>
 
 <header>
 	<h1>{heading}</h1>
 
 	{#each buttons as button}
-		<button title={button.description} on:click={button.action}>
-			<svg width="16" height="16" viewBox="0 0 24 24">
-				<path d={button.icon} />
-			</svg>
-		</button>
+		<IconButton description={button.description} action={button.action} icon={button.icon} />
 	{/each}
 </header>

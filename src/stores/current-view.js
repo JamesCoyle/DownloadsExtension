@@ -17,4 +17,4 @@ function createCurrentViewStore() {
 	}
 }
 
-export default createCurrentViewStore()
+export const currentView = createCurrentViewStore()

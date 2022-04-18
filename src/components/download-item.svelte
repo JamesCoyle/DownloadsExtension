@@ -1,7 +1,8 @@
 <script>
-	import modifierKeys from './../stores/modifier-keys'
+	import { modifierKeys } from '../stores/modifier-keys'
+	import { mdiDownload, mdiPause, mdiClose, mdiFolder, mdiDelete, mdiOpenInNew } from '@mdi/js'
 
-	import { mdiPlay, mdiPause, mdiClose, mdiFolder, mdiDelete, mdiOpenInNew } from '@mdi/js'
+	import Download from '../classes/download'
 
 	export let download
 
@@ -10,12 +11,12 @@
 	$: buttons = [
 		{
 			description: 'Resume download',
-			icon: mdiPlay,
+			icon: mdiDownload,
 			action() {
 				chrome.downloads.resume(download.id)
 			},
 			condition() {
-				return ['error', 'paused'].includes(state)
+				return download.resumable
 			},
 		},
 		{
@@ -25,9 +26,10 @@
 				chrome.downloads.pause(download.id)
 			},
 			condition() {
-				return state === 'downloading'
+				return download.matchesStates(Download.state.downloading)
 			},
 		},
+
 		{
 			description: 'Open in folder',
 			icon: mdiFolder,
@@ -35,7 +37,7 @@
 				chrome.downloads.show(download.id)
 			},
 			condition() {
-				return state === 'complete' && $modifierKeys.ctrl === false
+				return download.matchesStates(Download.state.complete) && $modifierKeys.ctrl === false
 			},
 		},
 		{
@@ -47,9 +49,10 @@
 				})
 			},
 			condition() {
-				return state === 'complete' && $modifierKeys.ctrl === true
+				return download.matchesStates(Download.state.complete) && $modifierKeys.ctrl === true
 			},
 		},
+
 		{
 			description: 'Cancel download',
 			icon: mdiClose,
@@ -57,7 +60,7 @@
 				chrome.downloads.cancel(download.id)
 			},
 			condition() {
-				return ['downloading', 'error', 'paused'].includes(state)
+				return download.matchesStates(Download.state.downloading, Download.state.error, Download.state.paused)
 			},
 		},
 		{
@@ -67,34 +70,25 @@
 				chrome.downloads.erase({ id: download.id })
 			},
 			condition() {
-				return state === 'complete' && $modifierKeys.ctrl === false
+				return download.matchesStates(Download.state.complete, Download.state.canceled) && $modifierKeys.ctrl === false
 			},
 		},
 		{
 			description: 'Delete download',
 			icon: mdiDelete,
 			action() {
-				chrome.downloads.removeFile(download.id, () => {
-					// todo : check for error before erasing
-					chrome.downloads.erase({ id: download.id })
-				})
+				chrome.downloads.removeFile(download.id).then(() => chrome.downloads.erase({ id: download.id }))
 			},
 			condition() {
-				return state === 'complete' && $modifierKeys.ctrl === true
+				return download.matchesStates(Download.state.complete) && $modifierKeys.ctrl === true
 			},
 		},
 	]
 
-	$: filename = download.filename.split(/[\/\\]/).pop()
-	$: progress = (download.bytesReceived / download.totalBytes) * 100
-	$: deleted = !download.exists
-
 	// get icon
-	chrome.downloads.getFileIcon(download.id, (i) => (icon = i))
-
-	// set state classes
-	// todo : pull data from download
-	$: state = download.error ? 'error' : download.endTime ? 'complete' : download.paused ? 'paused' : 'downloading'
+	chrome.downloads.getFileIcon(download.id, (i) => {
+		icon = i
+	})
 
 	function handleFileClick(e) {
 		// todo : handle click on file which is errored/incomplete
@@ -106,7 +100,7 @@
 	@keyframes complete {
 		0%,
 		50% {
-			background-color: #33991e;
+			background-color: #33993b;
 		}
 		25%,
 		75% {
@@ -144,11 +138,11 @@
 	}
 
 	.download.paused::before {
-		background-color: #99951e;
+		background-color: #ffc247;
 	}
 
 	.download.error::before {
-		background-color: #d73333;
+		background-color: #fe4134;
 	}
 
 	.download.complete::before {
@@ -188,6 +182,7 @@
 
 	.state {
 		opacity: 0.6;
+		font-size: 0.8em;
 		text-transform: capitalize;
 	}
 
@@ -201,14 +196,18 @@
 	}
 </style>
 
-<div class="download {state}" style="--progress: {progress}%">
-	<button class="file" title={filename} data-state={state} on:click={handleFileClick}>
+<div class="download {download.state}" style="--progress: {download.progress}%">
+	<button class="file" title={download.name} data-state={download.state} on:click={handleFileClick}>
 		<img class="icon" src={icon} alt="" />
 		<div class="file-info">
-			<div class="filename">{filename}</div>
-			{#if state !== 'complete' || deleted}
-				<div class="state">{state || 'Deleted'}</div>
-			{/if}
+			<div class="filename">{download.name}</div>
+			<div class="state">
+				{#if download.matchesStates(Download.state.downloading)}
+					{download.progressStr}
+				{:else if !download.matchesStates(Download.state.complete)}
+					{download.state}
+				{/if}
+			</div>
 		</div>
 	</button>
 

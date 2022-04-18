@@ -1,45 +1,47 @@
 <script>
-	import settings from './../stores/settings'
-	import currentView from './../stores/current-view'
+	import { theme, iconColor, defaultIconColor, showShelf, notify } from './../stores/settings'
+	import { currentView } from './../stores/current-view'
 
-	import Header from './../components/header.svelte'
+	import IconButton from '../components/icon-button.svelte'
+	import Header from '../components/header.svelte'
 
+	import { mdiRestore } from '@mdi/js'
 	import { icoKofi } from './../custom-icons'
 
-	function updateNotifyPreference({ target: { checked: enable, name: type } }) {
-		if (enable) {
-			requestNotificationPermission(
-				() => chrome.storage.local.set({ [type]: true }),
-				() => {
-					alert('Notifications permission must be granted to enable notifications')
-					event.target.checked = false
-				}
-			)
+	function updateIconColor(e) {
+		$iconColor = e.target.value
+	}
+
+	function updatePermission() {
+		// Request permission if any notification active otherwise remove.
+		if (Object.values($notify).some((enabled) => enabled)) {
+			chrome.permissions.request({ permissions: ['notifications'] })
 		} else {
-			chrome.storage.local.set({ [type]: false })
+			chrome.permissions.remove({ permissions: ['notifications'] })
 		}
-	}
-
-	function updateShelfPreference(event) {
-		chrome.storage.local.set({ showShelf: event.target.checked })
-	}
-
-	function updateThemePreference(event) {
-		chrome.storage.local.set({ theme: event.target.value })
-	}
-
-	function updateIconPreference(event) {
-		chrome.storage.local.set({ icon: event.target.value })
 	}
 </script>
 
 <style>
+	section:not(:last-child) {
+		padding-bottom: 0.5rem;
+		border-bottom: 1px solid var(--hover-color);
+	}
+
+	h2 {
+		margin: 1rem 1rem 0.75rem 1rem;
+		font-size: 1rem;
+		font-weight: lighter;
+	}
+
 	label {
+		flex: 1;
 		padding: 0 0.5rem;
 	}
 
 	input,
 	select {
+		min-height: 1.5rem;
 		margin: 0.25rem 0.5rem;
 		padding: 0.25rem 0.5rem;
 	}
@@ -49,6 +51,17 @@
 		height: 1rem;
 	}
 
+	input[type='color'] {
+		cursor: pointer;
+		width: 1.5rem;
+		height: 1.5rem;
+		padding: 0;
+	}
+
+	input[type='color']::-webkit-color-swatch-wrapper {
+		padding: 0;
+	}
+
 	.setting-item {
 		display: flex;
 		flex-flow: row nowrap;
@@ -56,8 +69,6 @@
 		align-items: center;
 		min-height: 3rem;
 		padding: 0 0.5rem;
-
-		border-bottom: 1px solid var(--hover-color);
 	}
 </style>
 
@@ -73,35 +84,48 @@
 />
 
 <div class="scrollable">
-	<div class="setting-item">
-		<label for="enable-complete-notification">Notify on complete</label>
-		<input id="enable-complete-notification" type="checkbox" name="notifyOnComplete" checked={settings.notifyOnComplete} on:change={updateNotifyPreference} />
-	</div>
-	<div class="setting-item">
-		<label for="enable-error-notification">Notify on error</label>
-		<input id="enable-error-notification" type="checkbox" name="notifyOnError" checked={settings.notifyOnError} on:change={updateNotifyPreference} />
-	</div>
-	<div class="setting-item">
-		<label for="enable-shelf">Show download shelf</label>
-		<input id="enable-shelf" type="checkbox" checked={settings.showShelf} on:change={updateShelfPreference} />
-	</div>
-	<div class="setting-item">
-		<label for="theme-mode">Theme</label>
-		<select name="theme-mode" id="theme-mode" on:input={updateThemePreference}>
-			<option value="auto" selected={settings.theme === 'auto'}>Auto detect</option>
-			<option value="light" selected={settings.theme === 'light'}>Light</option>
-			<option value="dark" selected={settings.theme === 'dark'}>Dark</option>
-		</select>
-	</div>
-	<div class="setting-item">
-		<label for="icon">Icon</label>
-		<select name="icon" id="icon" on:input={updateIconPreference}>
-			<option value="auto" selected={settings.icon === 'auto'}>Match theme</option>
-			<option value="default" selected={settings.icon === 'default'}>Blue</option>
-			<option value="light" selected={settings.icon === 'light'}>Dark Gray</option>
-			<option value="dark" selected={settings.icon === 'dark'}>White</option>
-		</select>
-	</div>
+	<section>
+		<h2>General</h2>
+		<div class="setting-item">
+			<label for="enable-shelf">Show download shelf</label>
+			<input id="enable-shelf" type="checkbox" bind:checked={$showShelf} />
+		</div>
+	</section>
+	<section>
+		<h2>Appearance</h2>
+		<div class="setting-item">
+			<label for="theme-mode">Theme</label>
+			<select name="theme-mode" id="theme-mode" bind:value={$theme}>
+				<option value="auto">Auto detect</option>
+				<option value="light">Light</option>
+				<option value="dark">Dark</option>
+			</select>
+		</div>
+		<div class="setting-item">
+			<label for="icon">Icon color</label>
+			<IconButton description="Reset color to default" icon={mdiRestore} action={() => iconColor.set('auto')} />
+			<input type="color" name="icon-color" id="icon-color" value={$iconColor !== 'auto' ? $iconColor : $defaultIconColor} on:change={updateIconColor} />
+		</div>
+	</section>
+	<section>
+		<h2>Notifications</h2>
+		<div class="setting-item">
+			<label for="enable-start-notification">Download started</label>
+			<input id="enable-start-notification" type="checkbox" on:change={updatePermission} bind:checked={$notify.onStart} />
+		</div>
+		<div class="setting-item">
+			<label for="enable-paused-notification">Download paused</label>
+			<input id="enable-paused-notification" type="checkbox" on:change={updatePermission} bind:checked={$notify.onPause} />
+		</div>
+		<div class="setting-item">
+			<label for="enable-error-notification">Download error</label>
+			<input id="enable-error-notification" type="checkbox" on:change={updatePermission} bind:checked={$notify.onError} />
+		</div>
+		<div class="setting-item">
+			<label for="enable-complete-notification">Download completed</label>
+			<input id="enable-complete-notification" type="checkbox" on:change={updatePermission} bind:checked={$notify.onComplete} />
+		</div>
+	</section>
 </div>
 <a class="bottom-button" href="https://ko-fi.com/jamescoyle" target="_blank">
 	<svg width="16" height="16" viewBox="0 0 24 24">

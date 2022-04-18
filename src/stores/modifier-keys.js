@@ -1,6 +1,6 @@
 import { readable } from 'svelte/store'
 
-export default readable(
+export const modifierKeys = readable(
 	{
 		ctrl: false,
 		shift: false,

@@ -1,8 +1,9 @@
 <script>
-	import currentView from './../stores/current-view'
+	import { currentView } from './../stores/current-view'
+	import { downloads } from './../stores/downloads'
 
-	import Header from './../components/header.svelte'
-	import Download from './../components/download.svelte'
+	import Header from '../components/header.svelte'
+	import DownloadItem from '../components/download-item.svelte'
 
 	import { mdiInformationOutline, mdiCog } from '@mdi/js'
 
@@ -11,8 +12,6 @@
 	function openDownloadsTab() {
 		chrome.tabs.create({ url: 'chrome://downloads' })
 	}
-
-	export let downloads = []
 </script>
 
 <style>
@@ -35,7 +34,7 @@
 		right: 0;
 		left: 0;
 		display: flex;
-		flex-flow: row nowrap;
+		flex-flow: row nowrap; 
 		align-items: center;
 		padding: 1rem;
 		flex: 0 0 3rem;
@@ -65,8 +64,8 @@
 />
 
 <div class="scrollable">
-	{#each downloads as download (download.id)}
-		<Download {download} />
+	{#each $downloads as download (download.id)}
+		<DownloadItem {download} />
 	{:else}
 		<div class="center">
 			<img width="160" height="160" src="images/no-downloads.svg" alt="" />

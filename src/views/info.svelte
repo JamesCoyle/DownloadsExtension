@@ -1,7 +1,7 @@
 <script>
-	import currentView from './../stores/current-view'
+	import { currentView } from './../stores/current-view'
 
-	import Header from './../components/header.svelte'
+	import Header from '../components/header.svelte'
 
 	import { mdiClose, mdiAlertOutline, mdiCodeTags } from '@mdi/js'
 	import { icoKofi, icoGithub } from './../custom-icons'
